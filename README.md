@@ -1,14 +1,18 @@
 # 🛡️ Secure Telegram Bot 🕊️
 
-## 💻 Technologies Used
+## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
+
+👋 Hi! 👋 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
+This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment.  
+I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
+
+**⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
+
+## 💻 Stack
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
-
-👋 Hi! 👋 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage! This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment. I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
-
-**⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
 
 ## ✨ Key Advantages of This Approach
 
@@ -51,8 +55,8 @@ Follow these steps to get your local environment up and running:
 
 [Provide clear and concise instructions on how to use your Telegram bot. Explain the available commands and how to interact with it within the Telegram app.]
 
-## 📄 Project Structure
-├── .
+## 📄 Project Structure  
+├── .  
 ├── Dockerfile          🐳 Docker configuration for containerization  
 ├── main.py             🚀 Main entry point of the bot application  
 ├── pyproject.toml      ⚙️ Project metadata and dependencies managed by UV  
@@ -63,14 +67,20 @@ Follow these steps to get your local environment up and running:
 ├── utils/          └── Utility functions and classes  
 └── ...
 
-
-
 ## ☕ Support My Work
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-yellow?logo=kofi)](https://buymeacoffee.com/max.v.zaikin)
-[![Donate](https://img.shields.io/badge/Donate-orange?logo=paypal)](comming-up)
+[![Donate](https://img.shields.io/badge/Donate-orange?logo=paypal)](coming-up)
 
-If you find this project helpful or appreciate my commitment to ethical development, consider buying me a coffee or making a donation! Your support helps me continue working on projects like this and contributing to a positive online environment. 🙏
+If you find this project helpful or appreciate my commitment to ethical development, consider buying me a coffee or making a donation!  
+Your support helps me continue working on projects like this and contributing to a positive online environment. 🙏
+
+Also, don't forget to:
+
+- ⭐ Star this project on GitHub  
+- 👍 Like and share if you find it useful  
+- 👔 Connect with me on [LinkedIn](https://www.linkedin.com/in/maxzaikin)  
+- 📢 Subscribe to my [Telegram channel](https://t.me/makszaikin) for updates and insights
 
 ## 🕊️ My Vision for a Safer Telegram
 
