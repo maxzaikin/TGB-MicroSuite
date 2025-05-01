@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     """Запускает Telegram-бота."""
-    bot_instance = AioBot(token="7753876174:AAEQGEUCQFCo0R-YVnMEZ2chf9OMqnGG0FA")  # Замените на свой токен
+    bot_instance = AioBot(token="...")  # Замените на свой токен
     await bot_instance.run()  # Теперь просто await, так как main уже async
 
 if __name__ == "__main__":
