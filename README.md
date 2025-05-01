@@ -78,7 +78,7 @@ I believe in the power of Telegram for positive communication and community buil
 
 ## 🤝 Contributing
 
-[Include your contribution guidelines here, similar to the previous example.]
+Any contribution are highly apprciated and welcome 👋
 
 ## 📜 License
 
