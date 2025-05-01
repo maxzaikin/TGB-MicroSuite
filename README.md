@@ -1,5 +1,6 @@
 # 🛡️ Secure Telegram Bot 🕊️
 
+## 💻 Technologies Used
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
@@ -52,27 +53,22 @@ Follow these steps to get your local environment up and running:
 
 ## 📄 Project Structure
 ├── .
-├── Dockerfile          🐳 Docker configuration for containerization
-├── main.py             🚀 Main entry point of the bot application
-├── pyproject.toml      ⚙️ Project metadata and dependencies managed by UV
-├── README.md           📖 This file!
-└── src/                📂 Source code directory (OOP architecture)
-├── handlers/       └── Bot command handlers
-├── middlewares/    └── Aiogram middlewares
-├── utils/          └── Utility functions and classes
+├── Dockerfile          🐳 Docker configuration for containerization  
+├── main.py             🚀 Main entry point of the bot application  
+├── pyproject.toml      ⚙️ Project metadata and dependencies managed by UV  
+├── README.md           📖 This file!  
+└── src/                📂 Source code directory (OOP architecture)  
+├── handlers/       └── Bot command handlers  
+├── middlewares/    └── Aiogram middlewares  
+├── utils/          └── Utility functions and classes  
 └── ...
 
-## 💻 Technologies Used
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
-[![Docker](https://img.shields.io/badge/Docker-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![UV](https://img.shields.io/badge/UV-purple.svg)](https://pypi.org/project/uv/)
 
 ## ☕ Support My Work
 
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-yellow?logo=kofi)](https://www.buymeacoffee.com/YOUR_COFFEE_LINK)
-[![Donate](https://img.shields.io/badge/Donate-orange?logo=paypal)](YOUR_PAYPAL_LINK)
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-yellow?logo=kofi)](https://buymeacoffee.com/max.v.zaikin)
+[![Donate](https://img.shields.io/badge/Donate-orange?logo=paypal)](comming-up)
 
 If you find this project helpful or appreciate my commitment to ethical development, consider buying me a coffee or making a donation! Your support helps me continue working on projects like this and contributing to a positive online environment. 🙏
 
