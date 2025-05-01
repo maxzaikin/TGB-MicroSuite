@@ -32,24 +32,26 @@ Follow these steps to get your local environment up and running:
     * 📦 `uv` installed (`pip install uv`).
 
 2.  **Cloning the Repository:**
-    ```bash
-    git clone <YOUR_REPOSITORY_URL>
-    cd <YOUR_PROJECT_DIRECTORY>
-    ```
-    Replace `<YOUR_REPOSITORY_URL>` with the actual URL of your Git repository.
-
+   
 3.  **Building the Docker Image:**
     ```bash
-    docker build -t your_username/your_telegram_bot .
+    docker build -t tgrambuddy-app -f tgrambuddy.dockerfile . 
     ```
-    Replace `your_username/your_telegram_bot` with your desired Docker Hub username and image name.
-
-4.  **Running the Docker Container:**
+   
+4.  **Create .env file**
+   Create .env file with following format:
+   ```
+   BOT_TOKEN=<your telegram:token>
+   ```
+   Make sure you do not use any quotes around your token  " or ' or any other.
+   Plase .env file in the same folder with dockerfile.
+   
+5.  **Running the Docker Container:**
     You will need to provide your Telegram Bot token as an environment variable.
     ```bash
-    docker run -e BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN" your_username/your_telegram_bot
+    docker run --env-file .env --name tgrambuddy-container -d tgrambuddy-app
     ```
-    Replace `"YOUR_TELEGRAM_BOT_TOKEN"` with your actual bot token obtained from BotFather on Telegram.
+    
 
 ## ⚙️ Usage
 
