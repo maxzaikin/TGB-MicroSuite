@@ -45,7 +45,7 @@ Follow these steps to get your local environment up and running:
    ```
    Make sure you do not use any quotes around your token  " or ' or any other.
    Plase .env file in the same folder with dockerfile.
-   
+
 5.  **Running the Docker Container:**
     You will need to provide your Telegram Bot token as an environment variable.
     ```bash
@@ -55,7 +55,7 @@ Follow these steps to get your local environment up and running:
 
 ## ⚙️ Usage
 
-[Provide clear and concise instructions on how to use your Telegram bot. Explain the available commands and how to interact with it within the Telegram app.]
+comming soon
 
 ## 📄 Project Structure  
 ├── .  
