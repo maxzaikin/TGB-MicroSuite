@@ -8,4 +8,5 @@ dependencies = [
     "aiogram>=3.20.0.post0",
     "dependency-injector>=4.46.0",
     "load-dotenv>=0.1.0",
+    "sqlalchemy>=2.0.40",
 ]
