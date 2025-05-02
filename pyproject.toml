@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "aiogram>=3.20.0.post0",
+    "alembic>=1.15.2",
     "dependency-injector>=4.46.0",
     "load-dotenv>=0.1.0",
     "sqlalchemy>=2.0.40",
