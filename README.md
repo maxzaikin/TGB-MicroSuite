@@ -9,6 +9,7 @@ I am passionate about contributing to a safer Telegram environment and promoting
 **⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
 
 ## 💻 Stack
+
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)
@@ -26,32 +27,36 @@ I am passionate about contributing to a safer Telegram environment and promoting
 
 Follow these steps to get your local environment up and running:
 
-1.  **Prerequisites:**
+1. **Prerequisites:**
     * 🐍 Python 3.12 or higher installed on your system ([python.org](https://www.python.org/downloads/)).
     * 🐳 Docker installed on your system ([docker.com](https://www.docker.com/get-started)).
     * 📦 `uv` installed (`pip install uv`).
 
-2.  **Cloning the Repository:**
-   
-3.  **Building the Docker Image:**
+2. **Cloning the Repository:**
+
+3. **Building the Docker Image:**
+
     ```bash
     docker build -t tgrambuddy-app -f tgrambuddy.dockerfile . 
     ```
-   
-4.  **Create .env file**
-   Create .env file with following format:
-   ```
-   BOT_TOKEN=<your telegram:token>
-   ```
-   Make sure you do not use any quotes around your token  " or ' or any other.
-   Plase .env file in the same folder with dockerfile.
 
-5.  **Running the Docker Container:**
+4. **Create .env file**
+   Create .env file with following format:
+
+   ``` text
+   BOT_TOKEN=<your telegram:token>
+   ASYNCSQLITE_DB_URL=sqlite+aiosqlite:///data/database/tgrambuddy.db
+   ```
+
+* Make sure you do not use any quotes around your token  " or ' or any other.
+* Plase .env file in the same folder with dockerfile.
+
+5. **Running the Docker Container**
     You will need to provide your Telegram Bot token as an environment variable.
+
     ```bash
     docker run --env-file .env --name tgrambuddy-container -d tgrambuddy-app
     ```
-    
 
 ## ⚙️ Usage
 

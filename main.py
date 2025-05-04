@@ -6,22 +6,22 @@ TgramBuddy - A solution for building and managing Telegram bots.
 Copyright (c) 2025 Maks V. Zaikin
 Released by 01-May-2025 under the MIT License.
 """
-from pathlib import Path
-import asyncio
-import logging
 import os
 import sys
-from dotenv import load_dotenv
-from src.bot.core.aiobot import AioBot
-from src.database.db_adapter import DBAdapter
+import asyncio
+import logging
 import subprocess
+
 from alembic.config import Config
 from alembic import command
 
-
-db_adapter= DBAdapter(db_engine='sqlite')
+from pathlib import Path
+from dotenv import load_dotenv
+from src.bot.core.aiobot import AioBot
+from src.database.db_adapter import DBAdapter
 
 load_dotenv()
+
 bot_token: str|None = os.environ.get("BOT_TOKEN")
 logging.basicConfig(level=logging.INFO, 
                     stream=sys.stderr,
@@ -65,6 +65,8 @@ async def main():
 
 if __name__ == "__main__":
     # Init database
+    logging.info(f'DB_ROOT: {os.getenv("DB_ROOT")}')
+    logging.info(f'ASYNCSQLITE_DB_URL: {os.getenv("ASYNCSQLITE_DB_URL")}')
     db_adapter = run_migrations()
     logging.info("Database initialized successfully")
     
