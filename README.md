@@ -1,15 +1,5 @@
 # 🛡️ Secure Telegram Bot 🕊️
 
-## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
-
-👋 Hi! 👋 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
-This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment.  
-I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
-
-**⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
-
-## 💻 Stack
-
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
@@ -18,6 +8,15 @@ I am passionate about contributing to a safer Telegram environment and promoting
 [![Alembic](https://img.shields.io/badge/Alembic-1.7-orange.svg)](https://alembic.sqlalchemy.org/en/latest/)
 [![asyncio](https://img.shields.io/badge/asyncio-3.11-blue.svg)](https://docs.python.org/3/library/asyncio.html)
 [![SQLite](https://img.shields.io/badge/SQLite-3.x-green.svg)](https://www.sqlite.org/)
+
+
+## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
+
+👋 Hi! 👋 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
+This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment.  
+I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
+
+**⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
 
 ## ✨ Key Advantages of This Approach
 
