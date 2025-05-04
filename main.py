@@ -37,18 +37,16 @@ if not bot_token:
     exit(1)
 
 def run_migrations():
-    """Инициализация и миграция базы данных"""
     try:
-        # 1. Создаем папку для БД если не существует
+        # 1. Create folder if not exists
         db_path = Path("data/database")
         db_path.mkdir(parents=True, exist_ok=True)
         
-        # 2. Инициализируем адаптер БД
+        # 2. Initi db_adapter
         db_adapter = DBAdapter(db_engine='sqlite')
         
-        # 3. Применяем миграции Alembic
-        subprocess.run(["alembic", "upgrade", "head"], check=True)
-        
+        # 3. Apply migrations
+        subprocess.run(["alembic", "upgrade", "head"], check=True)        
        
         return db_adapter
         
@@ -66,7 +64,7 @@ async def main():
         await db_adapter.close()
 
 if __name__ == "__main__":
-    # Инициализация БД
+    # Init database
     db_adapter = run_migrations()
     logging.info("Database initialized successfully")
     
