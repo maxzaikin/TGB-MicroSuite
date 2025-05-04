@@ -12,7 +12,7 @@
 
 ## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
 
-👋 Hi! 👋 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
+Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
 This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment.  
 I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
 
