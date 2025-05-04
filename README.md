@@ -55,7 +55,11 @@ Follow these steps to get your local environment up and running:
     You will need to provide your Telegram Bot token as an environment variable.
 
     ```bash
-    docker run --env-file .env --name tgrambuddy-container -d tgrambuddy-app
+    # Production mode (Windows environmet)
+    docker run --env-file .env -v ${PWD}/data:/app/data -d tgrambuddy-app
+
+    # Debug mode  (Windows environmet)
+    docker run --env-file .env -v ${PWD}/data:/app/data --rm -it tgrambuddy-app /bin/bash
     ```
 
 ## ⚙️ Usage
