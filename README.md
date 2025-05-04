@@ -73,6 +73,7 @@ comming soon
 
 ## 📄 Project Structure  
 
+``` text
 TgramBuddy/
 ├── src/
 │   ├── bot/
@@ -88,6 +89,8 @@ TgramBuddy/
 ├── main.py
 ├── config.py
 └── .env
+```
+
 -----------
 ├── .  
 ├── Dockerfile          🐳 Docker configuration for containerization  
