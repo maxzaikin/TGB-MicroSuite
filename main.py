@@ -6,13 +6,20 @@ TgramBuddy - A solution for building and managing Telegram bots.
 Copyright (c) 2025 Maks V. Zaikin
 Released by 01-May-2025 under the MIT License.
 """
-
+from pathlib import Path
 import asyncio
 import logging
 import os
 import sys
 from dotenv import load_dotenv
 from src.bot.core.aiobot import AioBot
+from src.database.db_adapter import DBAdapter
+import subprocess
+from alembic.config import Config
+from alembic import command
+
+
+db_adapter= DBAdapter(db_engine='sqlite')
 
 load_dotenv()
 bot_token: str|None = os.environ.get("BOT_TOKEN")
@@ -29,10 +36,38 @@ if not bot_token:
                   --name tgrambuddy-container -d tgrambuddy-app ")    
     exit(1)
 
+def run_migrations():
+    """Инициализация и миграция базы данных"""
+    try:
+        # 1. Создаем папку для БД если не существует
+        db_path = Path("data/database")
+        db_path.mkdir(parents=True, exist_ok=True)
+        
+        # 2. Инициализируем адаптер БД
+        db_adapter = DBAdapter(db_engine='sqlite')
+        
+        # 3. Применяем миграции Alembic
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+        
+       
+        return db_adapter
+        
+    except Exception as e:
+        logging.error(f"Database initialization failed: {e}")
+        raise
+    
 async def main():
     logging.info(f"Runing bot with. BOT_TOKEN:{bot_token}")
-    bot_instance = AioBot(token=bot_token)
-    await bot_instance.run()
+    
+    try:        
+        bot_instance = AioBot(token=bot_token)
+        await bot_instance.run()
+    finally:
+        await db_adapter.close()
 
 if __name__ == "__main__":
+    # Инициализация БД
+    db_adapter = run_migrations()
+    logging.info("Database initialized successfully")
+    
     asyncio.run(main())
