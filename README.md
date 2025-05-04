@@ -78,14 +78,14 @@ TgramBuddy/
 ├── src/
 │   ├── bot/
 │   │   ├── core/
-│   │   │   ├── bot.py
-│   │   │   └── dispatcher.py
-│   │   ├── handlers/
-│   │   │   ├── start.py
-│   │   │   └── help.py
+│   │   │   └── aiobot.py
+│   │   └── handlers/
+│   │       ├── onboarding/
+│   │       └── media/
 │   └── database/
-│       └── models/
-│           └── user.py
+│       ├── db_adapter.py
+│       └── models.py
+│           
 ├── main.py
 ├── config.py
 └── .env
