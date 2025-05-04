@@ -72,6 +72,23 @@ Follow these steps to get your local environment up and running:
 comming soon
 
 ## 📄 Project Structure  
+
+TgramBuddy/
+├── src/
+│   ├── bot/
+│   │   ├── core/
+│   │   │   ├── bot.py
+│   │   │   └── dispatcher.py
+│   │   ├── handlers/
+│   │   │   ├── start.py
+│   │   │   └── help.py
+│   └── database/
+│       └── models/
+│           └── user.py
+├── main.py
+├── config.py
+└── .env
+-----------
 ├── .  
 ├── Dockerfile          🐳 Docker configuration for containerization  
 ├── main.py             🚀 Main entry point of the bot application  

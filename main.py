@@ -54,11 +54,11 @@ def run_migrations():
         logging.error(f"Database initialization failed: {e}")
         raise
     
-async def main():
+async def main(db_adapter: DBAdapter):
     logging.info(f"Runing bot with. BOT_TOKEN:{bot_token}")
     
     try:        
-        bot_instance = AioBot(token=bot_token)
+        bot_instance = AioBot(token=bot_token, logging=logging)
         await bot_instance.run()
     finally:
         await db_adapter.close()
@@ -70,4 +70,4 @@ if __name__ == "__main__":
     db_adapter = run_migrations()
     logging.info("Database initialized successfully")
     
-    asyncio.run(main())
+    asyncio.run(main(db_adapter))
