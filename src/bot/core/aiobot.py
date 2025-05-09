@@ -15,31 +15,33 @@ from aiogram import (
     Bot,
     Dispatcher
 )
-from aiogram.filters import (
-    Command,
-    Filter
+#from aiogram.filters import (
+#    Command,
+#    Filter
+#)
+#from aiogram.types import CallbackQuery
+from ..features import (
+    onboarding,
 )
-from aiogram.types import CallbackQuery
-#from  ..handlers.onboarding.start_command import StartHandler
-from ..handlers import onboarding, media
+from ..middleware.db_middleware import DbAdapterMiddleware
+from src.database.db_adapter import DBAdapter
 
 class AioBot:
-    
-    def __init__(self, token: str, logging: logging)->None:
+
+    def __init__(self, token: str, logging: logging, db_adapter:DBAdapter)->None:
         self.bot = Bot(token)
         self.dp = Dispatcher()
         self.logging= logging
 
-    def register_handlers(self):     
-        onboarding.register_handlers(self.dp)
-        media.register_handlers(self.dp)
+        self.dp.message.middleware(DbAdapterMiddleware(db_adapter))
+        self.dp.callback_query.middleware(DbAdapterMiddleware(db_adapter))
+        
+        #self.dp.message.middleware(ClientContextMiddleware())
+        #self.dp.callback_query.middleware(ClientContextMiddleware( ))
 
-        #self.dp.message.register(StartHandler, Command("start"))
-        # Register the callback button handler
-        #self.dp.callback_query.register(
-        #    UploadPhotoCallbackHandler, 
-        #    lambda c: c.data == "upload_photo"
-        #)
+    def register_handlers(self):
+        self.dp.include_router(onboarding.get_start_command_router())
+        #self.dp.include_router(media.get_media_router())
                 
     async def run(self):
         self.register_handlers()

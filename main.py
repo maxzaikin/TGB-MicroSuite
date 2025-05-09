@@ -23,7 +23,7 @@ from src.database.db_adapter import DBAdapter
 load_dotenv()
 
 bot_token: str|None = os.environ.get("BOT_TOKEN")
-logging.basicConfig(level=logging.INFO, 
+logging.basicConfig(level=logging.INFO,
                     stream=sys.stderr,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -46,7 +46,7 @@ def run_migrations():
         db_adapter = DBAdapter(db_engine='sqlite')
         
         # 3. Apply migrations
-        subprocess.run(["alembic", "upgrade", "head"], check=True)        
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
        
         return db_adapter
         
@@ -58,7 +58,7 @@ async def main(db_adapter: DBAdapter):
     logging.info(f"Runing bot with. BOT_TOKEN:{bot_token}")
     
     try:        
-        bot_instance = AioBot(token=bot_token, logging=logging)
+        bot_instance = AioBot(token=bot_token, logging=logging, db_adapter=db_adapter)
         await bot_instance.run()
     finally:
         await db_adapter.close()

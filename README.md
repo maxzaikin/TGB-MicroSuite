@@ -75,33 +75,52 @@ comming soon
 
 ``` text
 TgramBuddy/
-├── src/
-│   ├── bot/
-│   │   ├── core/
-│   │   │   └── aiobot.py
-│   │   └── handlers/
-│   │       ├── onboarding/
-│   │       └── media/
-│   └── database/
-│       ├── db_adapter.py
-│       └── models.py
+├── src/                                                | 📂 Source code directory
+│   ├── api/                                            |
+|   |
+│   ├── bot/                                            |
+│   │   ├── core/                                       |
+│   │   │   ├── aiobot.py                               |
+│   │   │   ├── localization.py                         |
+│   │   │   └── t_cc.py                                 | currently excluded
+|   |   |
+│   │   ├── features/                                   |
+│   │   │   ├── onboarding/                             |
+│   │   │   │   ├── locales/                            |
+│   │   │   │   │   └── en.json                         |
+│   │   │   │   │
+│   │   │   │   ├── __init__.py                         |
+│   │   │   │   └── start_handler.py                    |
+│   │   │   │   └── start_router.py                     |
+│   │   │   │
+│   │   │   ├── img_upload/                             |
+│   │   │   │   ├── locales/                            |
+│   │   │   │   │   └── en.json                         |
+│   │   │   │   │
+│   │   │   │   ├── __init__.py                         |
+│   │   │   │   └── img_upload_callback.py              |
+│   │   │   │   └── img_upload_handler.py               |
+│   │   │   │   └── img_upload_router.py                |
+│   │   │   │
+│   │   │   └── __init-_.py                             |
+|   |   |
+│   │   ├── middleware/                                 |
+│   │   │   ├── cc_middleware.py                        | currently excluded
+│   │   │   └── db_middleware.py                        |
+|   |   |
+│   │   └── services/                                   |
+|   |
+│   └── database/                                       |
+│       ├── __init__.py                                 |
+│       ├── db_adapter.py                               |
+│       └── models.py                                   |
 │           
-├── main.py
-├── config.py
+├── .dockerignore                                       | 🐳 Docker configuration for containerization                
+├── alembic.ini                                         |
+├── main.py                                             | 🚀 Main entry point of the bot application
+├── tgrambuddy.dockerfile
 └── .env
 ```
-
------------
-├── .  
-├── Dockerfile          🐳 Docker configuration for containerization  
-├── main.py             🚀 Main entry point of the bot application  
-├── pyproject.toml      ⚙️ Project metadata and dependencies managed by UV  
-├── README.md           📖 This file!  
-└── src/                📂 Source code directory (OOP architecture)  
-├── handlers/       └── Bot command handlers  
-├── middlewares/    └── Aiogram middlewares  
-├── utils/          └── Utility functions and classes  
-└── ...
 
 ## ☕ Support My Work
 

@@ -57,8 +57,8 @@ class DBAdapter:
         else:
             raise ValueError(f"Unsupported database engine: {self.db_engine}")
 
-    @event.listens_for(Model, "init", propagate=True)
-    def init_relationships(self, tgt, arg, kw):
+   # @event.listens_for(Model, "init", propagate=True)
+    def init_relationships(self, tgt, arg, kwargs):
         mapper = inspect(tgt.__class__)
         
         for arg in mapper.relationships:
