@@ -93,14 +93,14 @@ TgramBuddy/
 │   │   │   │   └── start_handler.py                    |
 │   │   │   │   └── start_router.py                     |
 │   │   │   │
-│   │   │   ├── img_upload/                             |
+│   │   │   ├── imgupload/                             |
 │   │   │   │   ├── locales/                            |
 │   │   │   │   │   └── en.json                         |
 │   │   │   │   │
 │   │   │   │   ├── __init__.py                         |
-│   │   │   │   └── img_upload_callback.py              |
-│   │   │   │   └── img_upload_handler.py               |
-│   │   │   │   └── img_upload_router.py                |
+│   │   │   │   └── imgupload_callback.py              |
+│   │   │   │   └── imgupload_handler.py               |
+│   │   │   │   └── imgupload_router.py                |
 │   │   │   │
 │   │   │   └── __init-_.py                             |
 |   |   |
