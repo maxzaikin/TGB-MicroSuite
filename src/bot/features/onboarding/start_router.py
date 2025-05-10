@@ -1,5 +1,5 @@
 """
-tgrambuddy/src/bot/features/start_router.py
+tgrambuddy/src/bot/features/onboarding/start_router.py
 
 This module defines router for /start command handler classusing the Aiogram framework. 
 

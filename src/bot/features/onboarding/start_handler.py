@@ -1,5 +1,5 @@
 """
-tgrambuddy/src/bot/features/start_handler.py
+tgrambuddy/src/bot/features/onboarding/start_handler.py
 
 This module defines /start command handler classusing the Aiogram framework. 
 When a user initiates the bot with the `/start` command, 
@@ -34,14 +34,6 @@ async def start_command_handler(message: Message,
     """
     locale = load_locale(Path(__file__))
 
-    inline_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=localize_message(locale, 
-                                                        "upload_photo_text"
-                                                        ), callback_data="upload_photo")],
-        ]
-    )
-
     #TODO: move client to separate object
     tg_user = message.from_user
     tg_user_id = tg_user.id
@@ -61,6 +53,7 @@ async def start_command_handler(message: Message,
 
         logging.info('-----------> Client data has been deleted from database.')
 
+    #TODO: 
     originals_folder = root_folder / 'originals'
     bw_folder = root_folder / 'bw'
     improved_folder = root_folder / 'improved'
@@ -77,7 +70,15 @@ async def start_command_handler(message: Message,
     logging.info('-----------> Client: telegram_id:%s, name:%s has been add to db',
                  tg_user_id,
                  tg_user_name)
-
+    
+    inline_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=localize_message(locale, 
+                                                        "upload_photo_text"
+                                                        ), callback_data="upload_photo")],
+        ]
+    )
+    
     await message.reply(
         localize_message(locale, "start_message_text"),
         reply_markup=inline_keyboard

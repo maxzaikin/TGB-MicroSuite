@@ -1,5 +1,5 @@
 """
-tgrambuddy/src/bot/features/__init__.py
+tgrambuddy/src/bot/features/onboarding/__init__.py
 
 TgramBuddy - A solution for building and managing Telegram bots.
 Copyright (c) 2025 Maks V. Zaikin
