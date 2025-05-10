@@ -11,23 +11,19 @@ import sys
 import asyncio
 import logging
 import subprocess
-
-from alembic.config import Config
-from alembic import command
-
 from pathlib import Path
 from dotenv import load_dotenv
+from alembic.config import Config
+from alembic import command
 from src.bot.core.aiobot import AioBot
 from src.database.db_adapter import DBAdapter
 
-load_dotenv()
-
-bot_token: str|None = os.environ.get("BOT_TOKEN")
 logging.basicConfig(level=logging.INFO,
                     stream=sys.stderr,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-#logging.basicConfig(level=logging.ERROR, stream=sys.stderr,format='%(asctime)s - %(levelname)s - %(message)s')
+load_dotenv()
+bot_token: str|None = os.environ.get("BOT_TOKEN")
 
 if not bot_token:
     logging.error("The environment variable BOT_TOKEN hasn't been found. \

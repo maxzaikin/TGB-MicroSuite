@@ -15,14 +15,12 @@ from aiogram import (
     Bot,
     Dispatcher
 )
-#from aiogram.filters import (
-#    Command,
-#    Filter
-#)
-#from aiogram.types import CallbackQuery
+
 from ..features import (
     onboarding,
+    imgupload,
 )
+
 from ..middleware.db_middleware import DbAdapterMiddleware
 from src.database.db_adapter import DBAdapter
 
@@ -31,7 +29,7 @@ class AioBot:
     def __init__(self, token: str, logging: logging, db_adapter:DBAdapter)->None:
         self.bot = Bot(token)
         self.dp = Dispatcher()
-        self.logging= logging
+        self.logging=logging
 
         self.dp.message.middleware(DbAdapterMiddleware(db_adapter))
         self.dp.callback_query.middleware(DbAdapterMiddleware(db_adapter))
@@ -39,12 +37,20 @@ class AioBot:
         #self.dp.message.middleware(ClientContextMiddleware())
         #self.dp.callback_query.middleware(ClientContextMiddleware( ))
 
-    def register_handlers(self):
+    def register_routers(self):
+        """
+        register_routers
+        """
+        
         self.dp.include_router(onboarding.get_start_command_router())
-        #self.dp.include_router(media.get_media_router())
+        self.dp.include_router(imgupload.get_imgupload_router())
                 
     async def run(self):
-        self.register_handlers()
+        """
+        run
+        """
+        
+        self.register_routers()
 
         try:
             await self.dp.start_polling(self.bot)
