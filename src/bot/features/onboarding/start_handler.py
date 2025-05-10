@@ -33,12 +33,13 @@ async def start_command_handler(message: Message,
     start_command_handler
     """
     locale = load_locale(Path(__file__))
+    PVOL_FOLDER = os.getenv("DATA_DIR", "./data")
 
     #TODO: move client to separate object
     tg_user = message.from_user
     tg_user_id = tg_user.id
     tg_user_name = tg_user.full_name or "Unknown"
-    root_folder = Path(os.getenv('PVOL_FOLDER')) / 'clients' /str(tg_user_id)
+    root_folder = Path(PVOL_FOLDER) / 'clients' /str(tg_user_id)
 
     if root_folder.exists() and root_folder.is_dir():
         shutil.rmtree(root_folder)

@@ -32,12 +32,13 @@ async def save_compressed_image(message: Message,
     save_uploaded_photo
     """
     locale = load_locale(Path(__file__))
-
+    PVOL_FOLDER = os.getenv("DATA_DIR", "./data")
+    
     #TODO: move client to separate object
     tg_user = message.from_user
     tg_user_id = tg_user.id
     tg_user_name = tg_user.full_name or "Unknown"
-    root_folder = Path(os.getenv('PVOL_FOLDER')) / 'clients' /str(tg_user_id)  
+    root_folder = Path(PVOL_FOLDER) / 'clients' /str(tg_user_id)  
 
     largest_photo = message.photo[-1]
     file = await message.bot.get_file(largest_photo.file_id)
