@@ -4,6 +4,11 @@ LABEL       key="Maks V. Zaikin"
 
 ENV         PYTHONUNBUFFERED=1
 
+RUN         apt-get update && apt-get install -y \
+                libgl1-mesa-glx \
+                libglib2.0-0 \
+                && rm -rf /var/lib/apt/lists/*
+
 WORKDIR     /app
 COPY        pyproject.toml ./
 COPY        alembic.ini ./
