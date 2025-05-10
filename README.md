@@ -13,7 +13,6 @@
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
 [![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
-
 ## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
 
 Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
@@ -87,7 +86,7 @@ TgramBuddy/
 │   │   │   └── t_cc.py                                 | currently excluded
 |   |   |
 │   │   ├── features/                                   |
-│   │   │   ├── onboarding/                             |
+│   │   │   ├── onboarding/                             | 🏭 Feature In production lifecycle
 │   │   │   │   ├── locales/                            |
 │   │   │   │   │   └── en.json                         |
 │   │   │   │   │
@@ -95,14 +94,23 @@ TgramBuddy/
 │   │   │   │   └── start_handler.py                    |
 │   │   │   │   └── start_router.py                     |
 │   │   │   │
-│   │   │   ├── imgupload/                             |
+│   │   │   ├── imgupload/                              | 🏭 Feature In production lifecycle
 │   │   │   │   ├── locales/                            |
 │   │   │   │   │   └── en.json                         |
 │   │   │   │   │
 │   │   │   │   ├── __init__.py                         |
-│   │   │   │   └── imgupload_callback.py              |
-│   │   │   │   └── imgupload_handler.py               |
-│   │   │   │   └── imgupload_router.py                |
+│   │   │   │   └── imgupload_callback.py               |
+│   │   │   │   └── imgupload_handler.py                |
+│   │   │   │   └── imgupload_router.py                 |
+│   │   │   │
+│   │   │   ├── imgbw/                                  | 🔥🚧 New Feature. Work-In-Progress
+│   │   │   │   ├── locales/                            |
+│   │   │   │   │   └── en.json                         |
+│   │   │   │   │
+│   │   │   │   ├── __init__.py                         |
+│   │   │   │   └── imgbw_callback.py                   |
+│   │   │   │   └── imgbw_handler.py                    |
+│   │   │   │   └── imgbw_router.py                     |
 │   │   │   │
 │   │   │   └── __init-_.py                             |
 |   |   |
