@@ -53,3 +53,11 @@ async def process_bw_image(client: Client,
     await message.answer_photo(FSInputFile(path=bw_photo_path))
 
     logging.info('sent: %s', bw_photo_path)
+
+    await message.answer(
+        localize_message(locale, "image_processed_successfully"),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=localize_message(locale, "back_to_menu"), callback_data="main_menu")],
+            [InlineKeyboardButton(text=localize_message(locale, "upload_another_image"), callback_data="upload_photo")]
+        ])
+    )
