@@ -76,60 +76,100 @@ comming soon
 
 ``` text
 TgramBuddy/
-├── src/                                                | 📂 Source code directory
-│   ├── api/                                            |
-|   |
-│   ├── bot/                                            |
-│   │   ├── core/                                       |
-│   │   │   ├── aiobot.py                               |
-│   │   │   ├── localization.py                         |
-│   │   │   └── t_cc.py                                 | currently excluded
-|   |   |
-│   │   ├── features/                                   |
-│   │   │   ├── onboarding/                             | 🏭 Feature In production lifecycle
-│   │   │   │   ├── locales/                            |
-│   │   │   │   │   └── en.json                         |
+├── tgrambot/  
+│   ├── src/                                                | 📂 Source code directory
+│   │   ├── bot/                                            |
+│   │   │   ├── core/                                       |
+│   │   │   │   ├── aiobot.py                               |
+│   │   │   │   ├── localization.py                         |
+│   │   │   │   └── t_cc.py                                 | currently excluded
+│   |   |   |
+│   │   │   ├── features/                                   |
+│   │   │   │   ├── onboarding/                             | 🏭 Feature In production lifecycle
+│   │   │   │   │   ├── locales/                            |
+│   │   │   │   │   │   └── en.json                         |
+│   │   │   │   │   │
+│   │   │   │   │   ├── __init__.py                         |
+│   │   │   │   │   ├── start_handler.py                    |
+│   │   │   │   │   └── start_router.py                     |
+│   │   │   │   │   │
+│   │   │   │   ├── imgupload/                              | 🏭 Feature In production lifecycle
+│   │   │   │   │   ├── locales/                            |
+│   │   │   │   │   │   └── en.json                         |
+│   │   │   │   │   │
+│   │   │   │   │   ├── __init__.py                         |
+│   │   │   │   │   ├── imgupload_callback.py               |
+│   │   │   │   │   ├── imgupload_handler.py                |
+│   │   │   │   │   └── imgupload_router.py                 |
 │   │   │   │   │
-│   │   │   │   ├── __init__.py                         |
-│   │   │   │   └── start_handler.py                    |
-│   │   │   │   └── start_router.py                     |
-│   │   │   │
-│   │   │   ├── imgupload/                              | 🏭 Feature In production lifecycle
-│   │   │   │   ├── locales/                            |
-│   │   │   │   │   └── en.json                         |
+│   │   │   │   ├── imgbw/                                  | 🔥🚧 New Feature. Work-In-Progress
+│   │   │   │   │   ├── locales/                            |
+│   │   │   │   │   │   └── en.json                         |
+│   │   │   │   │   │
+│   │   │   │   │   ├── __init__.py                         |
+│   │   │   │   │   ├── imgbw_callback.py                   |
+│   │   │   │   │   ├── imgbw_handler.py                    |
+│   │   │   │   │   └── imgbw_router.py                     |
 │   │   │   │   │
-│   │   │   │   ├── __init__.py                         |
-│   │   │   │   └── imgupload_callback.py               |
-│   │   │   │   └── imgupload_handler.py                |
-│   │   │   │   └── imgupload_router.py                 |
-│   │   │   │
-│   │   │   ├── imgbw/                                  | 🔥🚧 New Feature. Work-In-Progress
-│   │   │   │   ├── locales/                            |
-│   │   │   │   │   └── en.json                         |
-│   │   │   │   │
-│   │   │   │   ├── __init__.py                         |
-│   │   │   │   └── imgbw_callback.py                   |
-│   │   │   │   └── imgbw_handler.py                    |
-│   │   │   │   └── imgbw_router.py                     |
-│   │   │   │
-│   │   │   └── __init-_.py                             |
-|   |   |
-│   │   ├── middleware/                                 |
-│   │   │   ├── cc_middleware.py                        | currently excluded
-│   │   │   └── db_middleware.py                        |
-|   |   |
-│   │   └── services/                                   |
-|   |
-│   └── database/                                       |
-│       ├── __init__.py                                 |
-│       ├── db_adapter.py                               |
-│       └── models.py                                   |
-│           
-├── .dockerignore                                       | 🐳 Docker configuration for containerization                
-├── alembic.ini                                         |
-├── main.py                                             | 🚀 Main entry point of the bot application
-├── tgrambuddy.dockerfile
-└── .env
+│   │   │   │   └── __init__.py                             |
+│   |   |   |
+│   │   │   ├── middleware/                                 |
+│   │   │   │   ├── cc_middleware.py                        | currently excluded
+│   │   │   │   └── db_middleware.py                        |
+│   |   |   |
+│   │   │   └── services/                                   |
+│   |   |
+│   │   └── database/                                       |
+│   │       ├── __init__.py                                 |
+│   │       ├── db_adapter.py                               |
+│   │       └── models.py                                   |
+│   │           
+│   ├── .dockerignore                                       | 🐳 Docker configuration for containerization                
+│   ├── alembic.ini                                         |
+│   ├── main.py                                             | 🚀 Main entry point of the bot application
+│   ├── tgrambuddy.dockerfile                               |
+│   └── .env                                                |
+|
+├── tgramllm/ 
+|   ├── gguf/
+│   │   └── mistral-7b-instruct-v0.2.Q4_K_M.gguf
+│   │
+|   ├── src/
+│   │   ├── llm/
+│   │   │   ├── core/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── config.py
+│   │   │   │   └── security.py
+│   │   │   │  
+│   │   │   ├── routers/ 
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── auth_router.py
+│   │   │   │   └── llm_router.py   
+│   │   │   │   
+│   │   │   ├── services/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── engine.py
+│   │   │   │   
+│   │   │   ├── schemas/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── llm_schemas.py
+│   │   │   │   └── token_schemas.py
+│   │   │   │ 
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   │
+│   │   └── database/
+│   │       ├── __init__.py
+│   │       └── models.py
+│   │    
+│   ├── .dockerignore                                   | 🐳 Docker configuration for containerization                
+│   ├── alembic.ini
+│   ├── tgramllm.dockerfile
+│   └── .env
+│
+├── redis/                                                  |
+│
+└── docker-compose.yml                                      |
 ```
 
 ## ☕ Support My Work

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+# MZ
 from src.database.db_adapter import Model, DBAdapter
 import src.database.models 
 
@@ -23,9 +24,11 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+#MZ
 target_metadata = Model.metadata
 
-db_adapter = DBAdapter()  # Или передайте нужные аргументы
+#MZ
+db_adapter = DBAdapter()
 config.set_main_option("sqlalchemy.url", db_adapter.engine.url.render_as_string(hide_password=False))
 
 # other values from the config, defined by the needs of env.py,
