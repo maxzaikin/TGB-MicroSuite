@@ -102,7 +102,7 @@ TgramBuddy/
 │   │   │   │   │   ├── imgupload_handler.py                |
 │   │   │   │   │   └── imgupload_router.py                 |
 │   │   │   │   │
-│   │   │   │   ├── imgbw/                                  | 🔥🚧 New Feature. Work-In-Progress
+│   │   │   │   ├── imgbw/                                  | 
 │   │   │   │   │   ├── locales/                            |
 │   │   │   │   │   │   └── en.json                         |
 │   │   │   │   │   │
@@ -130,7 +130,7 @@ TgramBuddy/
 │   ├── tgrambuddy.dockerfile                               |
 │   └── .env                                                |
 |
-├── tgramllm/ 
+├── tgramllm/                                               |🔥🚧 New Feature. Work-In-Progress
 |   ├── gguf/
 │   │   └── mistral-7b-instruct-v0.2.Q4_K_M.gguf
 │   │
@@ -162,14 +162,14 @@ TgramBuddy/
 │   │       ├── __init__.py
 │   │       └── models.py
 │   │    
-│   ├── .dockerignore                                   | 🐳 Docker configuration for containerization                
+│   ├── .dockerignore                                                  
 │   ├── alembic.ini
 │   ├── tgramllm.dockerfile
 │   └── .env
 │
-├── redis/                                                  |
+├── redis/                                                  
 │
-└── docker-compose.yml                                      |
+└── docker-compose.yml                                      
 ```
 
 ## ☕ Support My Work
