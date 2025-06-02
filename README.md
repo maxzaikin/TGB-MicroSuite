@@ -57,7 +57,34 @@ Follow these steps to get your local environment up and running:
 * Make sure you do not use any quotes around your token  " or ' or any other.
 * Plase .env file in the same folder with dockerfile.
 
-5. **Running the Docker Container**
+5. **Install node.js and npm**
+   https://nodejs.org/en
+   install with autotools and chocolatey
+
+PS C:\Users\MaksV\Documents\repo\TgramBuddy\tgramllm\frontend> npm install
+
+added 137 packages, and audited 138 packages in 28s
+
+35 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm notice
+npm notice New major version of npm available! 10.9.2 -> 11.4.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.1
+npm notice To update run: npm install -g npm@11.4.1
+npm notice
+PS C:\Users\MaksV\Documents\repo\TgramBuddy\tgramllm\frontend>
+
+npm install -D @vitejs/plugin-react\
+npm install -D @types/react @types/react-dom
+
+6. **Running the Docker Container**
     You will need to provide your Telegram Bot token as an environment variable.
 
     ```bash
@@ -134,8 +161,8 @@ TgramBuddy/
 |   ├── gguf/
 │   │   └── mistral-7b-instruct-v0.2.Q4_K_M.gguf
 │   │
-|   ├── src/
-│   │   ├── llm/
+|   ├── backend/
+│   │   ├── src/
 │   │   │   ├── core/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── config.py
@@ -161,6 +188,26 @@ TgramBuddy/
 │   │   └── database/
 │   │       ├── __init__.py
 │   │       └── models.py
+│   │
+│   ├── frontend/                                         | 📂 🔥🚧 New Feature. Work-In-Progress(React + TypeScript + Vite)
+│   │   ├── public/                                       | Static assets (index.html, favicon, etc.)
+│   │   ├── src/                                          | Frontend source files
+│   │   │   ├── components/                               | Reusable React components
+│   │   │   │   ├── Header.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── LLMChat.tsx                           | 🔥🚧 New Feature. Work-In-Progress
+│   │   │   ├── pages/                                    | React pages or views
+│   │   │   │   ├── Home.tsx                              | 🔥🚧 New Feature. Work-In-Progress
+│   │   │   │   └── Login.tsx                             | Auth page
+│   │   │   ├── hooks/                                    | 
+│   │   │   ├── services/                                 | API clients (e.g., axios instances)
+│   │   │   │   └── llmApi.ts                             | Functions to call backend endpoints
+│   │   │   ├── App.tsx                                   | Root React component with routing
+│   │   │   ├── main.tsx                                  | Frontend entry point
+│   │   │   └── vite-env.d.ts                             | Vite TypeScript env types
+│   │   ├── vite.config.ts                                | Vite configuration file
+│   │   ├── package.json                                  | NPM package manifest
+│   │   └── tsconfig.json                                 | TypeScript configuratio
 │   │    
 │   ├── .dockerignore                                                  
 │   ├── alembic.ini
