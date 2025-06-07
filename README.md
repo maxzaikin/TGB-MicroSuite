@@ -9,7 +9,7 @@
 [![SQLite](https://img.shields.io/badge/SQLite-3.x-green.svg)](https://www.sqlite.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-3.x-blue.svg)](https://www.sqlalchemy.org/)
 [![Alembic](https://img.shields.io/badge/Alembic-1.7-orange.svg)](https://alembic.sqlalchemy.org/en/latest/)  
-![Vite](https://img.shields.io/badge/Vite-v5.0-orange.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-v5.0-orange.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-v19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-v24.1-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-v11.4.1-CB3837.svg?logo=npm&logoColor=white)](https://www.npmjs.com/)  
