@@ -50,7 +50,7 @@ async def login_for_access_token(
 
     logging.info("Trying to log-in. email_to_auth:%s, pass: %s",
                  form_data.username,
-                 form_data.password)
+                 "***")
 
 
     user = await security.authenticate_user(email_to_auth=form_data.username,
