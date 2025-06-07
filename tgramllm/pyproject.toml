@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.115.12",
     "passlib[bcrypt]>=1.7.4",
     "pydantic-settings>=2.9.1",
+    "pydantic[mypy]>=2.11.4",
     "python-jose>=3.4.0",
     "python-multipart>=0.0.20",
     "sqlalchemy>=2.0.41",
