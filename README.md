@@ -10,6 +10,10 @@
 [![SQLite](https://img.shields.io/badge/SQLite-3.x-green.svg)](https://www.sqlite.org/)
 [![NumPy](https://img.shields.io/badge/NumPy-v1.21-blue.svg?logo=numpy&logoColor=white)](https://numpy.org/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-v4.5.1-blue.svg?logo=opencv&logoColor=white)](https://opencv.org/)  
+[![Vite](https://img.shields.io/badge/Vite-v5.0-orange.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-v19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-v24.1-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![npm](https://img.shields.io/badge/npm-v11.4.1-CB3837.svg?logo=npm&logoColor=white)](https://www.npmjs.com/)
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
 [![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
@@ -57,34 +61,7 @@ Follow these steps to get your local environment up and running:
 * Make sure you do not use any quotes around your token  " or ' or any other.
 * Plase .env file in the same folder with dockerfile.
 
-5. **Install node.js and npm**
-   https://nodejs.org/en
-   install with autotools and chocolatey
-
-PS C:\Users\MaksV\Documents\repo\TgramBuddy\tgramllm\frontend> npm install
-
-added 137 packages, and audited 138 packages in 28s
-
-35 packages are looking for funding
-  run `npm fund` for details
-
-2 moderate severity vulnerabilities
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-Run `npm audit` for details.
-npm notice
-npm notice New major version of npm available! 10.9.2 -> 11.4.1
-npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.1
-npm notice To update run: npm install -g npm@11.4.1
-npm notice
-PS C:\Users\MaksV\Documents\repo\TgramBuddy\tgramllm\frontend>
-
-npm install -D @vitejs/plugin-react\
-npm install -D @types/react @types/react-dom
-
-6. **Running the Docker Container**
+5. **Running the Docker Container**
     You will need to provide your Telegram Bot token as an environment variable.
 
     ```bash
