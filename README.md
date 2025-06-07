@@ -13,7 +13,7 @@
 [![Vite](https://img.shields.io/badge/Vite-v5.0-orange.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-v19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-v24.1-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![npm](https://img.shields.io/badge/npm-v11.4.1-CB3837.svg?logo=npm&logoColor=white)](https://www.npmjs.com/)
+[![npm](https://img.shields.io/badge/npm-v11.4.1-CB3837.svg?logo=npm&logoColor=white)](https://www.npmjs.com/)  
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
 [![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
