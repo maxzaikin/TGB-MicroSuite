@@ -28,11 +28,11 @@ const DashboardPage = () => {
         }}
       >
         <Typography variant="h4" component="h1" gutterBottom>
-          Welcome to your dashboard
+          Welcome to TGramBuddy LLM dashboard
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 3 }}>
-          This is the main content area for your application.
+          Widgets comming soon...
         </Typography>
 
         <Button
