@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 from passlib.context import CryptContext
 
 from backend.database.models import User
-from backend.llm.core.config import settings
+from backend.src.core.config import settings
 
 DATABASE_URL = settings.ASYNCSQLITE_DB_URL
 

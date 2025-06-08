@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
-from src.core.config import settings
+from backend.src.core.config import settings
 
 
 class Model(DeclarativeBase):
