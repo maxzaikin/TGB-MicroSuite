@@ -174,7 +174,7 @@ app.include_router(
 )
 
 app.include_router(
-    keys_router.router,
+    auth_router.router,
     prefix=settings.API_V1_STR + "/api-key",
     tags=["API KEYS CRUD"]
 )

@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from database.models import ApiKey
-from schemas.akey_schemas import (
+from ..schemas.akey_schemas import (
     ApiKeyCreate,
-    ApKeyUpdate
+    ApiKeyUpdate
 )
 
 class APIKeyService:

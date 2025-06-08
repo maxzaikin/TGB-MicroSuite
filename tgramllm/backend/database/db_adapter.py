@@ -13,17 +13,17 @@ from pathlib import Path
 from typing import Union
 from dotenv import load_dotenv
 from sqlalchemy import (
-    MetaData, 
+    MetaData,
     inspect
 )
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.asyncio import (
-    create_async_engine, 
+    create_async_engine,
     async_sessionmaker
 )
 from sqlalchemy.orm import DeclarativeBase
 
-from backend.src.core.config import settings
+from src.core.config import settings
 
 
 class Model(DeclarativeBase):
