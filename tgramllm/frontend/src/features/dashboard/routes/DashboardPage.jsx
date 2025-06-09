@@ -1,13 +1,13 @@
-// src/features/dashboard/routes/DashboardPage.jsx
-
+/**
+ * src/features/dashboard/routes/DashboardPage.jsx
+ * 
+ * DashboardPage component displays the main dashboard UI for authenticated users.
+ * Users can access protected content and logout from this screen.
+ */
 import React from 'react';
 import { Box, Typography, Button, Container } from '@mui/material';
 import { useAuth } from '../../auth/hooks/useAuth';
 
-/**
- * DashboardPage component displays the main dashboard UI for authenticated users.
- * Users can access protected content and logout from this screen.
- */
 const DashboardPage = () => {
   const { logout } = useAuth();
 

@@ -4,8 +4,8 @@ import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
 // Import the real components
-import Layout from '../components/layout';
-import LoginPage from '../features/auth/routes/LoginPage'; // The real login page
+import Layout from '../components/layout/Layout';
+import LoginPage from '../features/auth/routes/LoginPage';
 import DashboardPage from '../features/dashboard/routes/DashboardPage';
 import ApiKeysPage from '../features/api-keys/routes/ApiKeysPage';
 
@@ -15,18 +15,17 @@ import Box from '@mui/material/Box';
 
 /**
  * A component to guard routes that require authentication.
- * It renders the main Layout with nested pages if the user is authenticated.
  */
 const PrivateRoute = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Redirect unauthenticated users to the login page
+    // Redirect unauthenticated users to the login page, saving their intended destination
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated, render the Layout which will contain the page via <Outlet />
+  // If authenticated, render the main app layout with the requested page
   return (
     <Layout>
       <Outlet />
@@ -36,12 +35,11 @@ const PrivateRoute = () => {
 
 /**
  * The main router for the application.
- * It handles the loading state and directs users based on authentication status.
  */
 export const AppRouter = () => {
-  const { isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Show a global spinner while the initial authentication check is in progress
+  // Show a global spinner during the initial authentication check
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -52,20 +50,29 @@ export const AppRouter = () => {
 
   return (
     <Routes>
-      {/* ==================================================================== */}
-      {/* THIS IS THE PUBLIC ROUTE FOR THE LOGIN PAGE, IT MUST BE PRESENT */}
-      <Route path="/login" element={<LoginPage />} />
-      {/* ==================================================================== */}
+      {/* 
+        This route handles unauthenticated users. 
+        If a logged-in user tries to visit /login, they are redirected to the dashboard.
+      */}
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />
+        }
+      />
 
-      {/* Group of protected routes */}
+      {/* 
+        This is the main entry for authenticated users.
+        The PrivateRoute component handles the protection logic.
+      */}
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/api-keys" element={<ApiKeysPage />} />
       </Route>
 
       {/* 
-        A catch-all route.
-        If a user navigates to a non-existent path, redirect them to the dashboard.
+        A catch-all route for any other path.
+        It redirects to the main dashboard page.
       */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -1,12 +1,12 @@
-// src/services/apiClient.js
-
-import axios from 'axios';
-
 /**
+ * src/services/apiClient.js
+ * 
  * Axios instance configured to interact with the backend API.
  * Automatically includes Bearer token from localStorage if available.
  * 
  */
+
+import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
