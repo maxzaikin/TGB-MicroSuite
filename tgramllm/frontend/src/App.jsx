@@ -1,6 +1,6 @@
 // src/App.jsx 
 import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from './features/auth/context/AuthContext';
+import { AuthProvider } from './features/auth/context/AuthProvider';
 import { AppRouter } from './routes'; // Импортируем наш центральный роутер
 
 const App = () => (

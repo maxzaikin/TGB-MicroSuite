@@ -1,58 +1,73 @@
-// src/routes/index.jsx - НОВАЯ ВЕРСИЯ
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+// src/routes/index.jsx
+
+import { Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
-// Импортируем компоненты с правильными путями
-import Layout from '../components/layout'; // Обратите внимание на чистый импорт
-import LoginPage from '../features/auth/routes/LoginPage';
+// Import the real components
+import Layout from '../components/layout';
+import LoginPage from '../features/auth/routes/LoginPage'; // The real login page
 import DashboardPage from '../features/dashboard/routes/DashboardPage';
 import ApiKeysPage from '../features/api-keys/routes/ApiKeysPage';
-import PrivateRoute from './PrivateRoute';
+
+// Import only the necessary MUI components
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 
 /**
- * Этот компонент группирует защищенные роуты.
- * Он сначала проверяет аутентификацию, затем оборачивает
- * дочерние страницы (которые рендерятся через <Outlet />) в Layout.
+ * A component to guard routes that require authentication.
+ * It renders the main Layout with nested pages if the user is authenticated.
  */
-const ProtectedLayout = () => {
-  // Вместо PrivateRoute на каждом роуте, можно использовать одну проверку здесь,
-  // но для наглядности оставим ваш PrivateRoute как обертку.
+const PrivateRoute = () => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    // Redirect unauthenticated users to the login page
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If authenticated, render the Layout which will contain the page via <Outlet />
   return (
-    <PrivateRoute>
-      <Layout>
-        <Outlet />
-      </Layout>
-    </PrivateRoute>
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 };
 
+/**
+ * The main router for the application.
+ * It handles the loading state and directs users based on authentication status.
+ */
 export const AppRouter = () => {
-  const { isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
+
+  // Show a global spinner while the initial authentication check is in progress
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Routes>
-      {/* Если пользователь НЕ аутентифицирован, все защищенные роуты будут недоступны,
-          и он будет перенаправлен на /login при попытке доступа. */}
+      {/* ==================================================================== */}
+      {/* THIS IS THE PUBLIC ROUTE FOR THE LOGIN PAGE, IT MUST BE PRESENT */}
+      <Route path="/login" element={<LoginPage />} />
+      {/* ==================================================================== */}
 
-      {/* Публичные роуты */}
-      {!isAuthenticated && (
-        <Route path="/login" element={<LoginPage />} />
-      )}
-
-      {/* Защищенные роуты */}
-      <Route element={<ProtectedLayout />}>
+      {/* Group of protected routes */}
+      <Route element={<PrivateRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/api-keys" element={<ApiKeysPage />} />
       </Route>
 
-      {/*
-        "Catch-all" роут: Перенаправляет на нужную страницу в зависимости от статуса логина.
-        Это элегантнее, чем дублировать path="*".
+      {/* 
+        A catch-all route.
+        If a user navigates to a non-existent path, redirect them to the dashboard.
       */}
-      <Route
-        path="*"
-        element={<Navigate to={isAuthenticated ? '/' : '/login'} />}
-      />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

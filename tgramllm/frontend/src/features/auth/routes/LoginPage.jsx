@@ -1,31 +1,34 @@
+// src/features/auth/routes/LoginPage.jsx
+
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth'; // Use our global auth hook
+import apiClient from '../../../services/apiClient'; // Correct path to apiClient
+
+// Material-UI imports
 import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Card,
-  CircularProgress,
-  Alert,
-  CardContent,
+  Container, Box, Typography, TextField, Button,
+  Card, CircularProgress, Alert, CardContent
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
-
-import apiClient from '../../../services/apiClient';
 
 /**
  * LoginPage component provides a login form for users to authenticate.
- *
- * @param {Function} onLoginSuccess - Callback triggered when login is successful.
+ * It uses the global AuthContext to manage login state.
  */
-const LoginPage = ({ onLoginSuccess }) => {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Get the login function from our AuthContext
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine where to redirect after login
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -38,16 +41,16 @@ const LoginPage = ({ onLoginSuccess }) => {
       formData.append('password', password);
 
       const response = await apiClient.post('/api/v1/auth/token', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
       const accessToken = response.data.access_token;
 
       if (accessToken) {
-        localStorage.setItem('access_token', accessToken);
-        onLoginSuccess();
+        // Call the login function from context, which will handle localStorage
+        login(accessToken);
+        // Redirect the user to their intended page or the dashboard
+        navigate(from, { replace: true });
       } else {
         setError('Failed to retrieve token. Please try again.');
       }
@@ -56,7 +59,7 @@ const LoginPage = ({ onLoginSuccess }) => {
         console.error('Login failed:', err.response.data.detail);
         setError(err.response.data.detail || 'Invalid email or password.');
       } else if (err.request) {
-        setError('No response from server. Please check your connection or start the backend.');
+        setError('No response from server. Check your connection or if the backend is running.');
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -66,29 +69,18 @@ const LoginPage = ({ onLoginSuccess }) => {
   };
 
   return (
+    // Use Flexbox to center the login card on the page
     <Box
-      sx={{
-        position: 'fixed',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '100%',
-        maxWidth: 480,
-        p: 2,
-        boxSizing: 'border-box',
-        overflowY: 'auto',
-        maxHeight: 'calc(100vh - 40px)',
-      }}
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      sx={{ bgcolor: 'grey.100' }}
     >
       <Container component="main" maxWidth="xs">
-        <Card sx={{ p: 4, boxShadow: 3, borderRadius: 2 }}>
-          <CardContent
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
+        <Card sx={{ p: 4, boxShadow: 5, borderRadius: 2 }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ mb: 2 }}>
               <LockOutlinedIcon color="primary" sx={{ fontSize: 48 }} />
             </Box>
@@ -96,18 +88,13 @@ const LoginPage = ({ onLoginSuccess }) => {
               Sign In
             </Typography>
 
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              noValidate
-              sx={{ width: '100%' }}
-            >
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
+            {error && (
+              <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+                {error}
+              </Alert>
+            )}
 
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: '100%' }}>
               <TextField
                 margin="normal"
                 required
@@ -119,11 +106,6 @@ const LoginPage = ({ onLoginSuccess }) => {
                 autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <EmailOutlinedIcon sx={{ mr: 1, color: 'action.active' }} />
-                  ),
-                }}
               />
 
               <TextField
@@ -137,11 +119,6 @@ const LoginPage = ({ onLoginSuccess }) => {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <VpnKeyOutlinedIcon sx={{ mr: 1, color: 'action.active' }} />
-                  ),
-                }}
               />
 
               <Button
@@ -151,25 +128,11 @@ const LoginPage = ({ onLoginSuccess }) => {
                 sx={{ mt: 3, mb: 2 }}
                 disabled={loading}
               >
-                {loading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  'Sign In'
-                )}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
               </Button>
             </Box>
           </CardContent>
         </Card>
-
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          align="center"
-          sx={{ mt: 5 }}
-        >
-          {'© '}
-          {new Date().getFullYear()} My Company. All rights reserved.
-        </Typography>
       </Container>
     </Box>
   );

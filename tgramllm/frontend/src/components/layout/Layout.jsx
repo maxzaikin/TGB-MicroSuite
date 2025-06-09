@@ -1,3 +1,4 @@
+// src/components/layout/Layout.jsx
 import React from 'react';
 import {
   AppBar,
