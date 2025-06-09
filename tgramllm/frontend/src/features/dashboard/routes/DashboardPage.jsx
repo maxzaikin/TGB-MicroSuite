@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button, Container } from '@mui/material';
-import { useAuth } from './useAuth';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 /**
  * DashboardPage component displays the main dashboard UI for authenticated users.

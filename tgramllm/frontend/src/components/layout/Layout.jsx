@@ -65,7 +65,7 @@ const Layout = ({ children, onLogout }) => {
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} TGramBuddy OpenSource (c)All rights belongs to all.
+          © {new Date().getFullYear()} TGramBuddy OpenSource (c)All rights belongs to .
         </Typography>
       </Box>
     </Box>

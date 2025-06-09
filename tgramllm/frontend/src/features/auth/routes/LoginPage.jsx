@@ -14,7 +14,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 
-import apiClient from './apiClient';
+import apiClient from '../../../services/apiClient';
 
 /**
  * LoginPage component provides a login form for users to authenticate.

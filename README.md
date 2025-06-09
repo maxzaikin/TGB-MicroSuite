@@ -224,9 +224,3 @@ Any contribution are highly apprciated and welcome 👋
 [MIT.]
 
 ## 📧 Contact
-
-[Max.V.Zaikin / #OpenToWork] - [Max.V.Zaikin@gmail.com]
-
----
-
-✨ Thank you for exploring this project! Let's build a better and safer digital world together! 🌍
