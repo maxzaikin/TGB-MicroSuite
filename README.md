@@ -82,9 +82,6 @@ graph TD
 
 4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
 
-## 📄 Project Structure  
-
-``` text
 ## 📂 Project Structure
 
 The repository is organized as a monorepo, where each top-level directory represents a distinct, independent service or a shared configuration. This structure promotes high cohesion and low coupling between components.
