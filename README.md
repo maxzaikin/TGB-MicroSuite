@@ -22,9 +22,10 @@
 
 Welcome to the repository for the **TGB-MicroSuite**, a platform built with a focus on secure, ethical, and scalable interactions within the Telegram ecosystem. This project has evolved from a single bot into a modern, containerized **microservices architecture**, designed for high performance and maintainability.
 
-**⚠️ Important Disclaimer:** The use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals is **strictly forbidden**. This platform is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
-
----
+> [!WARNING]
+> **Important Disclaimer: Ethical Use Only**
+>
+> The use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals is **strictly forbidden**. This platform is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
 
 ## ✨ Architectural Vision & Core Principles
 
