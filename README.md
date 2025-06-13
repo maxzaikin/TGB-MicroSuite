@@ -43,36 +43,40 @@ The platform consists of several independent services orchestrated by Docker Com
 
 ```mermaid
 graph TD
-    subgraph User Browser
-        B[Browser on localhost:3000]
+    subgraph "External World"
+        User[User's Browser]
+        TelegramAPI[Telegram API]
     end
 
-    subgraph Docker Network
-        RP[Reverse Proxy <br> (Nginx)]
-
-        subgraph TGB-MicroSuite
-            FD[llm-dashboard <br> (React/Nginx)]
-            API[llm-api <br> (FastAPI)]
-            BG[bot-gateway <br> (Aiogram)]
-        end
+    subgraph "TGB-MicroSuite Platform (Docker Network)"
+        direction LR
         
-        T[Telegram API]
+        Proxy[("Reverse Proxy<br>(Nginx)")]
+
+        subgraph "Application Services"
+            direction TB
+            Dashboard[llm-dashboard<br>(React UI)]
+            API[llm-api<br>(FastAPI)]
+            Gateway[bot-gateway<br>(Aiogram)]
+        end
     end
 
-    B -- HTTP Request --> RP
-    RP -- /api/* --> API
-    RP -- /* --> FD
+    %% Define connections
+    User -- HTTPS Request on Port 80/443 --> Proxy
+    Proxy -- /api/* --> API
+    Proxy -- /* --> Dashboard
     
-    T -- Webhook --> BG
-    BG -- Processes & Forwards --> API
+    TelegramAPI -- Webhook --> Gateway
+    Gateway -- Internal Request/Event --> API
+```
 
-    1. bot-gateway (Formerly TGramBot): The entry point for all interactions from the Telegram API. This service is responsible for receiving messages and forwarding them for processing.
+1. bot-gateway (Formerly TGramBot): The entry point for all interactions from the Telegram API. This service is responsible for receiving messages and forwarding them for processing.
 
-    2. llm-api (The LLM Backend): The core "brain" of the system. It handles business logic, interacts with the database, and processes tasks from the bot-gateway.
+2. llm-api (The LLM Backend): The core "brain" of the system. It handles business logic, interacts with the database, and processes tasks from the bot-gateway.
 
-    3. llm-dashboard (The Management Frontend): A modern React (SPA) application for managing the system, viewing data, and configuring API keys. Served by a dedicated Nginx container.
+3. llm-dashboard (The Management Frontend): A modern React (SPA) application for managing the system, viewing data, and configuring API keys. Served by a dedicated Nginx container.
 
-    4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
+4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
 
 ## ✨ Key Advantages of This Approach
 
