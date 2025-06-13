@@ -1,5 +1,6 @@
 # 🛡️ Secure Telegram Bot 🕊️
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![asyncio](https://img.shields.io/badge/asyncio-3.11-blue.svg)](https://docs.python.org/3/library/asyncio.html)
@@ -17,13 +18,61 @@
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
 [![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
-## 🤖 Welcome to TgramBuddy — A Secure & Ethical Telegram Bot
+## 🤖 Welcome to the TGB-MicroSuite Platform
 
-Welcome to the repository of my Telegram bot, built with a focus on secure and ethical usage!  
-This bot leverages the power of the `aiogram` library within an Object-Oriented Programming (OOP) architecture and is containerized for easy deployment.  
-I am passionate about contributing to a safer Telegram environment and promoting positive interactions.
+Welcome to the repository for the **TGB-MicroSuite**, a platform built with a focus on secure, ethical, and scalable interactions within the Telegram ecosystem. This project has evolved from a single bot into a modern, containerized **microservices architecture**, designed for high performance and maintainability.
 
-**⚠️ Important Disclaimer:** I strictly **forbid** the use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals. This project is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
+**⚠️ Important Disclaimer:** The use of this project or any part of it for fraudulent schemes, scams, or any activities that could harm or deceive individuals is **strictly forbidden**. This platform is developed with the intention of promoting peace, friendship, and positive development within the Telegram community. 🚫
+
+---
+
+## ✨ Architectural Vision & Core Principles
+
+This project is not just a collection of code; it's an implementation of a professional engineering philosophy. Our architecture is built upon the following principles:
+
+-   **Microservices Architecture:** The system is decomposed into small, independent, and loosely-coupled services. This allows for independent development, deployment, and scaling of each component.
+-   **Clean & Scalable Code:** We adhere to principles like **Feature-Sliced Design (FSD)** on the frontend and a clear service-layer separation on the backend. This ensures the codebase remains predictable and maintainable as it grows.
+-   **Infrastructure as Code (IaC):** The entire application stack, including inter-service networking, is defined declaratively in a `docker-compose.yml` file. This guarantees a reproducible environment for both development and production.
+-   **Type Safety:** We use **TypeScript** on the frontend and Python type hints with Pydantic on the backend to eliminate entire classes of runtime errors and make the code self-documenting.
+
+---
+
+## 🏗️ System Architecture Overview
+
+The platform consists of several independent services orchestrated by Docker Compose:
+
+```mermaid
+graph TD
+    subgraph User Browser
+        B[Browser on localhost:3000]
+    end
+
+    subgraph Docker Network
+        RP[Reverse Proxy <br> (Nginx)]
+
+        subgraph TGB-MicroSuite
+            FD[llm-dashboard <br> (React/Nginx)]
+            API[llm-api <br> (FastAPI)]
+            BG[bot-gateway <br> (Aiogram)]
+        end
+        
+        T[Telegram API]
+    end
+
+    B -- HTTP Request --> RP
+    RP -- /api/* --> API
+    RP -- /* --> FD
+    
+    T -- Webhook --> BG
+    BG -- Processes & Forwards --> API
+
+    1. bot-gateway (Formerly TGramBot): The entry point for all interactions from the Telegram API. This service is responsible for receiving messages and forwarding them for processing.
+
+    2. llm-api (The LLM Backend): The core "brain" of the system. It handles business logic, interacts with the database, and processes tasks from the bot-gateway.
+
+    3. llm-dashboard (The Management Frontend): A modern React (SPA) application for managing the system, viewing data, and configuring API keys. Served by a dedicated Nginx container.
+
+    4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
 
 ## ✨ Key Advantages of This Approach
 
@@ -79,121 +128,7 @@ comming soon
 ## 📄 Project Structure  
 
 ``` text
-TgramBuddy/
-├── tgrambot/  
-│   ├── src/                                                | 📂 Source code directory
-│   │   ├── bot/                                            |
-│   │   │   ├── core/                                       |
-│   │   │   │   ├── aiobot.py                               |
-│   │   │   │   ├── localization.py                         |
-│   │   │   │   └── t_cc.py                                 | currently excluded
-│   |   |   |
-│   │   │   ├── features/                                   |
-│   │   │   │   ├── onboarding/                             | 🏭 Feature In production lifecycle
-│   │   │   │   │   ├── locales/                            |
-│   │   │   │   │   │   └── en.json                         |
-│   │   │   │   │   │
-│   │   │   │   │   ├── __init__.py                         |
-│   │   │   │   │   ├── start_handler.py                    |
-│   │   │   │   │   └── start_router.py                     |
-│   │   │   │   │   │
-│   │   │   │   ├── imgupload/                              | 🏭 Feature In production lifecycle
-│   │   │   │   │   ├── locales/                            |
-│   │   │   │   │   │   └── en.json                         |
-│   │   │   │   │   │
-│   │   │   │   │   ├── __init__.py                         |
-│   │   │   │   │   ├── imgupload_callback.py               |
-│   │   │   │   │   ├── imgupload_handler.py                |
-│   │   │   │   │   └── imgupload_router.py                 |
-│   │   │   │   │
-│   │   │   │   ├── imgbw/                                  | 
-│   │   │   │   │   ├── locales/                            |
-│   │   │   │   │   │   └── en.json                         |
-│   │   │   │   │   │
-│   │   │   │   │   ├── __init__.py                         |
-│   │   │   │   │   ├── imgbw_callback.py                   |
-│   │   │   │   │   ├── imgbw_handler.py                    |
-│   │   │   │   │   └── imgbw_router.py                     |
-│   │   │   │   │
-│   │   │   │   └── __init__.py                             |
-│   |   |   |
-│   │   │   ├── middleware/                                 |
-│   │   │   │   ├── cc_middleware.py                        | currently excluded
-│   │   │   │   └── db_middleware.py                        |
-│   |   |   |
-│   │   │   └── services/                                   |
-│   |   |
-│   │   └── database/                                       |
-│   │       ├── __init__.py                                 |
-│   │       ├── db_adapter.py                               |
-│   │       └── models.py                                   |
-│   │           
-│   ├── .dockerignore                                       | 🐳 Docker configuration for containerization                
-│   ├── alembic.ini                                         |
-│   ├── main.py                                             | 🚀 Main entry point of the bot application
-│   ├── tgrambuddy.dockerfile                               |
-│   └── .env                                                |
-|
-├── tgramllm/                                               |🔥🚧 New Feature. Work-In-Progress
-|   ├── gguf/
-│   │   └── mistral-7b-instruct-v0.2.Q4_K_M.gguf
-│   │
-|   ├── backend/
-│   │   ├── src/
-│   │   │   ├── core/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── config.py
-│   │   │   │   └── security.py
-│   │   │   │  
-│   │   │   ├── routers/ 
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── auth_router.py
-│   │   │   │   └── llm_router.py   
-│   │   │   │   
-│   │   │   ├── services/
-│   │   │   │   ├── __init__.py
-│   │   │   │   └── engine.py
-│   │   │   │   
-│   │   │   ├── schemas/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── llm_schemas.py
-│   │   │   │   └── token_schemas.py
-│   │   │   │ 
-│   │   │   ├── __init__.py
-│   │   │   └── main.py
-│   │   │
-│   │   └── database/
-│   │       ├── __init__.py
-│   │       └── models.py
-│   │
-│   ├── frontend/                                         | 📂 🔥🚧 New Feature. Work-In-Progress(React + TypeScript + Vite)
-│   │   ├── public/                                       | Static assets (index.html, favicon, etc.)
-│   │   ├── src/                                          | Frontend source files
-│   │   │   ├── components/                               | Reusable React components
-│   │   │   │   ├── Header.tsx
-│   │   │   │   ├── Footer.tsx
-│   │   │   │   └── LLMChat.tsx                           | 🔥🚧 New Feature. Work-In-Progress
-│   │   │   ├── pages/                                    | React pages or views
-│   │   │   │   ├── Home.tsx                              | 🔥🚧 New Feature. Work-In-Progress
-│   │   │   │   └── Login.tsx                             | Auth page
-│   │   │   ├── hooks/                                    | 
-│   │   │   ├── services/                                 | API clients (e.g., axios instances)
-│   │   │   │   └── llmApi.ts                             | Functions to call backend endpoints
-│   │   │   ├── App.tsx                                   | Root React component with routing
-│   │   │   ├── main.tsx                                  | Frontend entry point
-│   │   │   └── vite-env.d.ts                             | Vite TypeScript env types
-│   │   ├── vite.config.ts                                | Vite configuration file
-│   │   ├── package.json                                  | NPM package manifest
-│   │   └── tsconfig.json                                 | TypeScript configuratio
-│   │    
-│   ├── .dockerignore                                                  
-│   ├── alembic.ini
-│   ├── tgramllm.dockerfile
-│   └── .env
-│
-├── redis/                                                  
-│
-└── docker-compose.yml                                      
+                                   
 ```
 
 ## ☕ Support My Work
