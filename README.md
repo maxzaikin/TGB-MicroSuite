@@ -82,6 +82,58 @@ graph TD
 
 4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
 
+## 📄 Project Structure  
+
+``` text
+## 📂 Project Structure
+
+The repository is organized as a monorepo, where each top-level directory represents a distinct, independent service or a shared configuration. This structure promotes high cohesion and low coupling between components.
+
+```text
+TGB-MicroSuite/
+├── .github/                    # CI/CD workflows (e.g., for automated testing and deployment)
+├── infra/                      # Infrastructure-as-Code (IaC) configurations
+│   └── reverse-proxy/          # Nginx configurations for the main gateway
+│       └── nginx.conf
+│
+├── services/                   # Contains the source code for all microservices
+│   ├── bot-gateway/            # The service that interacts with the Telegram API
+│   │   ├── src/
+│   │   ├── Dockerfile
+│   │   └── pyproject.toml
+│   │
+│   ├── llm-api/                # The core backend service (FastAPI)
+│   │   ├── src/
+│   │   ├── migrations/
+│   │   ├── Dockerfile
+│   │   └── pyproject.toml
+│   │
+│   └── llm-dashboard/          # The frontend management application (React)
+│       ├── src/
+│       ├── public/
+│       ├── Dockerfile
+│       ├── nginx.conf
+│       └── package.json
+│
+├── .env.example                # Example environment variables for all services
+├── docker-compose.yml          # The master file to orchestrate all services
+└── README.md                   # This file                                   
+```
+
+Directory Breakdown
+
+- infra/: This directory holds all configurations related to the project's infrastructure.
+  - reverse-proxy/: Contains the Nginx configuration for our main entry point, which routes traffic to the appropriate backend or frontend service.
+
+- services/: The heart of the project. Each sub-directory is a completely independent, containerized microservice.
+  - bot-gateway/: A lightweight Python service responsible for receiving webhook events from the Telegram API and placing them into a queue or forwarding them for processing.
+  - llm-api/: The main FastAPI backend. It contains all business logic, database models, and API endpoints for LLM processing and management tasks.
+  - llm-dashboard/: A modern Single Page Application (SPA) built with React and TypeScript. It provides the user interface for managing and interacting with the platform. It is served by its own dedicated Nginx container for optimal performance.
+
+- docker-compose.yml: The "glue" that holds the entire platform together. This file defines all services, networks, volumes, and environment variables, allowing the entire system to be launched with a single command.
+
+- .env.example: A template file that documents all the necessary environment variables required to run the platform. Developers should copy this to a .env file and fill in their secrets.
+
 ## ✨ Key Advantages of This Approach
 
 * **Modular and Maintainable (OOP):** The Object-Oriented Programming architecture promotes code reusability, organization, and easier maintenance. Each part of the bot's functionality is encapsulated within classes, making the codebase cleaner and more scalable.
@@ -128,16 +180,6 @@ Follow these steps to get your local environment up and running:
     # Debug mode  (Windows environmet)
     docker run --env-file .env -v ${PWD}/data:/app/data --rm -it tgrambuddy-app /bin/bash
     ```
-
-## ⚙️ Usage
-
-comming soon
-
-## 📄 Project Structure  
-
-``` text
-                                   
-```
 
 ## ☕ Support My Work
 
