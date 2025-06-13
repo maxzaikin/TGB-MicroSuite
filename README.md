@@ -1,4 +1,4 @@
-# 🛡️ Secure Telegram Bot 🕊️
+# Welcome to the TGB-MicroSuite Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
@@ -18,9 +18,9 @@
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
 [![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
-## 🤖 Welcome to the TGB-MicroSuite Platform
+## About this repository
 
-Welcome to the repository for the **TGB-MicroSuite**, a platform built with a focus on secure, ethical, and scalable interactions within the Telegram ecosystem. This project has evolved from a single bot into a modern, containerized **microservices architecture**, designed for high performance and maintainability.
+The **TGB-MicroSuite**, a platform built with a focus on secure, ethical, and scalable interactions within the Telegram ecosystem. This project has evolved from a single bot into a modern, containerized **microservices architecture**, designed for high performance and maintainability.
 
 > [!WARNING]
 > **Important Disclaimer: Ethical Use Only**
