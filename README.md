@@ -194,16 +194,17 @@ Also, don't forget to:
 - 👔 Connect with me on [LinkedIn](https://www.linkedin.com/in/maxzaikin)  
 - 📢 Subscribe to my [Telegram channel](https://t.me/makszaikin) for updates and insights
 
-## 🕊️ My Vision for a Safer Telegram
+## 📧 Contact & Professional Profiles
 
-I believe in the power of Telegram for positive communication and community building. Through this project, I aim to explore ways to contribute to a more secure and trustworthy Telegram ecosystem. I am committed to developing tools and promoting practices that help users stay safe and informed.
+I'm always open to connecting with fellow developers, researchers, and enthusiasts. Whether you have questions, suggestions, or just want to chat about technology, feel free to reach out through any of the channels below.
 
-## 🤝 Contributing
+| Platform      | Handle / Contact Info                                                                                              |
+|---------------|--------------------------------------------------------------------------------------------------------------------|
+| 📧 **Email**    | `Max.V.Zaikin@gmail.com`                                                                                           |
+| 📞 **Phone**    | `+7 (914) 755-65-38`                                                                                               |
+| ✈️ **Telegram** | [@makszaikin](https://t.me/makszaikin)                                                                             |
+| 👔 **LinkedIn**  | [linkedin.com/in/maksim-zaikin](https://linkedin.com/in/maksim-zaikin)                                             |
+| 💻 **GitHub**   | [github.com/maxzaikin](https://github.com/maxzaikin)                                                               |
+| 📊 **Tableau**  | [public.tableau.com/app/profile/maksim.zaikin](https://public.tableau.com/app/profile/maksim.zaikin)               |
 
-Any contribution are highly apprciated and welcome 👋
-
-## 📜 License
-
-[MIT.]
-
-## 📧 Contact
+<br>
