@@ -43,31 +43,35 @@ The platform consists of several independent services orchestrated by Docker Com
 
 ```mermaid
 graph TD
+    %% 1. Define all nodes first
+    User["User's Browser"]
+    TelegramAPI["Telegram API"]
+    Proxy[("Reverse Proxy (Nginx)")]
+    Dashboard["llm-dashboard<br>(React UI + Nginx)"]
+    API["llm-api<br>(FastAPI)"]
+    Gateway["bot-gateway<br>(Aiogram)"]
+
+    %% 2. Group nodes into subgraphs
     subgraph "External World"
-        User[User's Browser]
-        TelegramAPI[Telegram API]
+        User
+        TelegramAPI
     end
 
     subgraph "TGB-MicroSuite Platform (Docker Network)"
-        direction LR
-        
-        Proxy[("Reverse Proxy<br>(Nginx)")]
-
-        subgraph "Application Services"
-            direction TB
-            Dashboard[llm-dashboard<br>(React UI)]
-            API[llm-api<br>(FastAPI)]
-            Gateway[bot-gateway<br>(Aiogram)]
-        end
+        Proxy
+        Dashboard
+        API
+        Gateway
     end
 
-    %% Define connections
-    User -- HTTPS Request on Port 80/443 --> Proxy
-    Proxy -- /api/* --> API
-    Proxy -- /* --> Dashboard
+    %% 3. Define all connections between nodes
+    User -- "HTTP/S Requests" --> Proxy
     
-    TelegramAPI -- Webhook --> Gateway
-    Gateway -- Internal Request/Event --> API
+    Proxy -- "/api/*" --> API
+    Proxy -- "All other requests (/*)" --> Dashboard
+    
+    TelegramAPI -- "Webhook Events" --> Gateway
+    Gateway -- "Internal API Calls / Events" --> API
 ```
 
 1. bot-gateway (Formerly TGramBot): The entry point for all interactions from the Telegram API. This service is responsible for receiving messages and forwarding them for processing.
