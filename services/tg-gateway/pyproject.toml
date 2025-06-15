@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# --- Core Project Metadata ---
+name = "tg-gateway-service"
+version = "0.2.0"
+description = "A Telegram Bot Gateway service using Aiogram, responsible for handling all interactions with the Telegram API."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "Max V. Zaikin", email = "Max.V.Zaikin@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Aiogram",
+]
+
+# --- Production Dependencies ---
+dependencies = [
+    "aiogram>=3.5.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "alembic>=1.13.0",
+    "aiosqlite>=0.20.0",
+    "pydantic-settings>=2.2.0",
+    "opencv-python>=4.9.0", # For image processing features
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "httpx>=0.28.1",
+    "ruff>=0.11.13",
+]
+
+[project.optional-dependencies]
+# --- Development Dependencies ---
+# Install with: uv pip install -e ".[dev]"
+dev = [
+    "ruff>=0.4.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+# --- Project Scripts ---
+# This section creates a single command-line entry point called 'arag'.
+# It points to the 'main' function in our 'scripts/cli.py' file.
+# This IS compliant with PEP 621.
+# ----> How to configure
+# cd services/a-rag with activated venv
+# This will add "link" to project in venv, including arag.exe (for Windows) or arag (fir Linux/macOS), 
+# which will call func main from scripts/cli.py.
+# uv pip install -e .
+# after that you can run your custom commands like arag migrate etc...
+[project.scripts]
+gateway = "scripts.cli:main"
+# --- Setuptools Configuration ---
+# This section tells setuptools how to find your source code.
+[tool.setuptools.packages.find]
+# Look for packages inside the 'src' directory.
+where = ["src"]
+
+# --- Tool-specific Configuration ---
+
+[tool.ruff]
+line-length = 88
+src = ["src"]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "C90", "B", "TID"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"

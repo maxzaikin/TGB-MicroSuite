@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# --- Core Project Metadata ---
+# The name should be specific to the service.
+name = "arag-api-service"
+version = "0.1.0"
+description = "The backend API service for the A-RAG (Advanced Retrieval-Augmented Generation) system, handling user authentication, API key management, and LLM interactions."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name = "Maks V. Zaikin", email = "Max.V.Zaikin@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: FastAPI",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# --- Production Dependencies ---
+# Packages required to RUN the application.
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.29.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "alembic>=1.13.0",
+    "aiosqlite>=0.20.0",
+    "pydantic-settings>=2.2.0",
+    "pydantic[email]>=2.7.0", # [email] includes email-validator
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+    "python-multipart>=0.0.9",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "httpx>=0.28.1",
+    "ruff>=0.11.13",
+]
+
+[project.optional-dependencies]
+# --- Development Dependencies ---
+# Packages are used for development, testing, and code quality.
+dev = [
+    "ruff>=0.4.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0", # For testing FastAPI endpoints
+]
+
+# --- Project Scripts ---
+# This section creates a single command-line entry point called 'arag'.
+# It points to the 'main' function in our 'scripts/cli.py' file.
+# This IS compliant with PEP 621.
+# ----> How to configure
+# cd services/a-rag with activated venv
+# This will add "link" to project in venv, including arag.exe (for Windows) or arag (fir Linux/macOS), 
+# which will call func main from scripts/cli.py.
+# uv pip install -e .
+# after that you can run your custom commands like arag migrate etc...
+[project.scripts]
+arag = "scripts.cli:main"
+# --- Setuptools Configuration ---
+# This section tells setuptools how to find your source code.
+[tool.setuptools.packages.find]
+# Look for packages inside the 'src' directory.
+where = ["src"]
+
+# --- Tool-specific Configuration ---
+[tool.ruff]
+# Set the maximum line length. 88 for Black compatibility.
+line-length = 88
+# Indicates that our source code is in the 'src' directory.
+src = ["src"]
+# Specifies the target Python version for compatibility checks.
+target-version = "py312"
+
+[tool.ruff.lint]
+# Select a comprehensive set of rules for high code quality.
+# E, F: Standard pyflakes errors (must-have)
+# W: Pycodestyle warnings
+# I: Isort import sorting
+# C90: McCabe complexity checks
+# B: Flake8-bugbear (finds likely bugs)
+# TID: Flake8-tidy-imports (enforces clean import styles)
+select = ["E", "F", "W", "I", "C90", "B", "TID"]
+ignore = []
+# You can add specific rules to ignore if they conflict with your style.
+# e.g., ignore = ["E501"]
+
+[tool.ruff.format]
+# Ensures Ruff's formatter is 100% compatible with Black's style.
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

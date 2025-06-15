@@ -1,7 +1,0 @@
-{
-    "bw_convert_in_progress_message": "⚙️ Converting image to black & white...",
-    "bw_client_not_found_message": "❌ Client not found.",
-    "image_processed_successfully": "Изображение успешно обработано!",
-    "back_to_menu": "🏠 Return to main menu",
-    "upload_another_image": "Upload new image"
-}

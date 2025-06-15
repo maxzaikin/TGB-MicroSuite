@@ -1,0 +1,68 @@
+{
+  // --- Python Interpreter Configuration ---
+  // This is the MOST IMPORTANT setting. It tells VS Code where to find
+  // all installed packages (FastAPI, uvicorn, Ruff, etc.).
+  // A relative path is best for team collaboration.
+  "python.defaultInterpreterPath": ".\\.venv\\Scripts\\python.exe", // For Windows
+  // "python.defaultInterpreterPath": "./.venv/bin/python", // For macOS/Linux
+
+  // --- Code Analysis & Intellisense (Pylance) ---
+  // Tells Pylance where our source root is, which enables clean absolute imports.
+  // Example: `from core import config` instead of `from ..core import config`.
+  "python.analysis.extraPaths": ["./src"],
+
+  // --- Linter & Formatter Configuration (Ruff) ---
+  // Ruff is an extremely fast linter and formatter, written in Rust.
+  // It replaces Pylint, Flake8, Black, and isort with a single tool.
+  "[python]": {
+    // Set Ruff as the default formatter for all Python files.
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    // Ensure the file is formatted on every save.
+    "editor.formatOnSave": true,
+    // Configure actions to run on save. This is where Ruff's power shines.
+    "editor.codeActionsOnSave": {
+      // Runs Ruff's linter and applies all auto-fixable suggestions.
+      "source.fixAll": "explicit",
+      // Specifically runs import sorting. Redundant if `source.fixAll` is on,
+      // but good to have for clarity and for users who might disable fixAll.
+      "source.organizeImports": "explicit"
+    }
+  },
+  
+  // --- Disabling Old Tools ---
+  // Since Ruff handles everything, we explicitly disable the old tools
+  // to prevent conflicts and redundant notifications.
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.linting.enabled": true, // Keep this on, as Ruff hooks into it.
+  "isort.check": false, // Disable the isort extension's checks
+  "black-formatter.check": false, // Disable the black extension's checks
+
+
+  // --- Testing Configuration (Pytest) ---
+  // Configures VS Code's test discovery and execution features.
+  "python.testing.pytestArgs": [
+    // Specifies the directory to look for tests.
+    "tests/"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+
+  // --- General Editor & Workspace Settings ---
+  // Ensures that when you open a new terminal, it automatically activates
+  // the selected Python virtual environment.
+  "python.terminal.activateEnvironment": true,
+
+  // Hides common temporary folders from the file explorer for a cleaner view.
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.venv": true,
+    "**/.ruff_cache": true // Add Ruff's cache directory to the exclusion list
+  },
+  
+  // Helps VS Code apply correct syntax highlighting for .env files.
+  "files.associations": {
+    ".env.example": "dotenv"
+  }
+}

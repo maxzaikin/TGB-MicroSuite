@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: TG Gateway",
+      "type": "debugpy",
+      "request": "launch",
+      // We will launch our main application module directly.
+      "module": "src.app.main",
+      "justMyCode": true
+    }
+  ]
+}
