@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/chat/invoke",  # A more descriptive, action-oriented endpoint name
+    "/chat/invoke",
     response_model=llm_schemas.RAGResponse,
     summary="Invoke the RAG Agent [AUTH DISABLED]",
 )

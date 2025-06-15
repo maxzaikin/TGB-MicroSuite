@@ -36,7 +36,7 @@ def load_llm_model() -> Optional[Llama]:
     #    return
 
     # Use the new, absolute path property from settings.
-    model_path = r"C:\Users\MaksV\Documents\repo\TGB-MicroSuite\services\a-rag\model_data\mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+    model_path = r""
     logging.info(f"Attempting to load LLM model from absolute path: {model_path}")
 
     try:
