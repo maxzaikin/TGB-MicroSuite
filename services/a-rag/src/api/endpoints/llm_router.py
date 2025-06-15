@@ -9,35 +9,54 @@ prompt and returns a generated response. Access is protected and linked
 to an authenticated user.
 """
 
-from typing import Annotated
-
-from fastapi import APIRouter, Body, Depends
-
-from agent import engine
-from core import security
-from core.schemas import llm_schemas
-from storage.rel_db.models import User
+from fastapi import APIRouter, Body, HTTPException, Request
+from src.agent import engine as rag_engine  # Import the new engine function
+from src.core.schemas import llm_schemas  # Assuming a new schema for chat
 
 router = APIRouter()
 
 
-@router.post("/process", response_model=llm_schemas.LLMResponse)
-async def process_text_with_llm(
-    request_body: llm_schemas.LLMRequest = Body(...),
-    current_user: Annotated[User, Depends(security.fetch_user_by_jwt)] = None,
+@router.post(
+    "/chat/invoke",  # A more descriptive, action-oriented endpoint name
+    response_model=llm_schemas.RAGResponse,
+    summary="Invoke the RAG Agent [AUTH DISABLED]",
+)
+async def invoke_rag_agent(
+    # The dependency on the current user remains for security and logging.
+    # current_user: Annotated[User, Depends(security.fetch_user_by_jwt)],
+    # token: Optional[str] = Depends(security.oauth2_scheme),
+    # We use a new schema to reflect the new request format.
+    request: Request,
+    request_body: llm_schemas.RAGRequest = Body(...),
 ):
-    if not engine._mock_model_loaded:
-        return llm_schemas.LLMResponse(
-            generated_text="LLM model is not accessable.",
-            input_text=request_body.text,
-            user_email=current_user.email,
+    """
+    Accepts a user query, processes it through the RAG pipeline,
+    and returns the generated answer.
+    """
+    if not request_body.user_query:
+        raise HTTPException(
+            status_code=400, detail="Field 'user_query' cannot be empty."
         )
 
-    generated_response = await engine.generate_text(
-        prompt=request_body.text, max_tokens=request_body.max_tokens
+    # logging.info(
+    #    f"[A-RAG] Received query from user '{current_user.email}': '{request_body.user_query}'"
+    # )
+    llm_instance = request.app.state.llm
+    if llm_instance is None:
+        raise HTTPException(status_code=503, detail="AI model is not available")
+
+    # The router's job is simply to delegate the call to the engine.
+    generated_response = await rag_engine.process_user_query(
+        llm=llm_instance, user_query=request_body.user_query
     )
-    return llm_schemas.LLMResponse(
-        generated_text=generated_response,
-        input_text=request_body.text,
-        user_email=current_user.email,
+
+    # logging.info(
+    #    f"[A-RAG] Sending response to user '{current_user.email}': '{generated_response[:100]}...'"
+    # )
+
+    return llm_schemas.RAGResponse(
+        answer=generated_response,
+        original_query=request_body.user_query,
+        # user_email=current_user.email,
+        user_email="test@test.com",
     )

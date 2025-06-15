@@ -40,3 +40,13 @@ class LLMResponse(BaseModel):
     generated_text: str
     input_text: str
     user_email: EmailStr
+
+
+class RAGRequest(BaseModel):
+    user_query: str = Field(..., min_length=1)
+
+
+class RAGResponse(BaseModel):
+    answer: str
+    original_query: str
+    user_email: EmailStr

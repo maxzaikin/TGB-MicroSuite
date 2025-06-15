@@ -59,15 +59,19 @@ async def lifespan(tgramllm_app: FastAPI):
     logging.info("DBAdapter initialized and saved in tgramllm_app.state.db_adapter")
 
     logging.info("Loading LLM model...")
-    llm_engine.load_llm_model()
-    logging.info("LLM model successfully loaded.")
+    app.state.llm = llm_engine.load_llm_model()
+    if app.state.llm:
+        logging.info("LLM model loaded and stored in app.state.")
+    else:
+        logging.error("LLM model failed to load. The application will run without it.")
 
     yield
 
     logging.info("Stopping service: %s", settings.PROJECT_NAME)
     logging.info("Unloading LLM model...")
-    llm_engine.unload_llm_model()
-    logging.info("LLM model unloaded.")
+    # llm_engine.unload_llm_model()
+
+    logging.info("LLM model unloading function is not implemented in llm_engine.")
 
     if hasattr(tgramllm_app.state, "db_adapter") and tgramllm_app.state.db_adapter:
         logging.info("Closing DBAdapter sessions...")

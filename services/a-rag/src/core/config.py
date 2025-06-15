@@ -2,19 +2,23 @@
 """
 Configuration module for application settings.
 
-Defines the Settings class which loads configuration from the .env file
-in the project's root directory using Pydantic BaseSettings.
+Defines the Settings class which loads all configuration from environment
+variables or a .env file using Pydantic. It also computes absolute paths for
+critical resources like the ML model to ensure path robustness.
 """
+
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """
-    Application configuration settings loaded from environment variables or .env file.
+    Application configuration settings loaded from environment variables.
 
-    Pydantic automatically reads variables from the .env file and environment variables.
-    Environment variables will always override values from a .env file.
+    This class centralizes all configuration, provides default values, and
+    performs validation. It also includes computed properties for derived
+    settings like absolute file paths.
     """
 
     # --- Application Configuration ---
@@ -30,17 +34,36 @@ class Settings(BaseSettings):
     DEFAULT_USER_EMAIL: str
     DEFAULT_USER_PASSWORD: str
 
-    # --- Model & Database Configuration ---
-    MODEL_PATH: str
+    # --- Database Configuration ---
     DATABASE_URL: str
 
+    # --- Model Configuration ---
+    # This holds the RELATIVE path to the model from the monorepo root,
+    # as defined in the .env file.
+    MODEL_PATH: str
+
     # --- Pydantic Model Configuration ---
-    # This tells Pydantic to look for a file named '.env' in the current
-    # working directory and to load variables from it.
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        # Specifies the name of the file to load environment variables from.
+        env_file=".env",
+        env_file_encoding="utf-8",
+        # Allows environment variables to be case-insensitive.
+        case_sensitive=False,
+        # Ignores any extra fields not defined in this model.
+        extra="ignore",
     )
 
 
-# Create a single, reusable instance of the settings.
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    """
+    Returns a cached, singleton instance of the application settings.
+
+    This uses the lru_cache decorator to ensure the Settings object is
+    created and validated only once, the first time this function is called.
+    """
+    return Settings()
+
+
+# Create a single, globally accessible instance of the settings for easy import.
+settings = get_settings()
