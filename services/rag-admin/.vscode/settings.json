@@ -1,0 +1,49 @@
+{
+  // --- Linter & Formatter Configuration ---
+  // We use ESLint for linting and Prettier for code formatting.
+  // This ensures a consistent and high-quality codebase.
+  
+  // Sets Prettier as the default formatter for all relevant file types.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  
+  // Automatically format the file on every save.
+  "editor.formatOnSave": true,
+
+  // Configure actions to run on save.
+  "editor.codeActionsOnSave": {
+    // Runs ESLint's auto-fixer on save. This cleans up a lot of minor issues automatically.
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // --- Language-specific Settings ---
+  // These settings apply only to the specified file types.
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // --- ESLint Validation ---
+  // Tells the ESLint extension which languages to validate.
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+
+  // --- General Editor & Workspace Settings ---
+  // Hides common temporary/generated folders from the file explorer.
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/dist": true
+  }
+}
