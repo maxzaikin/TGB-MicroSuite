@@ -8,15 +8,16 @@ to the backend A-RAG API service for processing, and returning the
 generated response to the user.
 """
 
-import asyncio
+import logging
 
 from aiogram.types import Message
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.clients.rag_api_client import RagApiClient
 
-# In the future, you will import a service to handle the API call.
-# from src.services.rag_api_client import RagApiClient
 
-
-async def handle_text_message(message: Message):
+async def handle_text_message(
+    message: Message, session: AsyncSession, rag_client: RagApiClient
+):
     """
     Processes a non-command text message from the user.
 
@@ -30,29 +31,23 @@ async def handle_text_message(message: Message):
         # A safeguard in case this handler is ever triggered by a non-text message.
         return
 
+    user_id = message.from_user.id
+    query_text = message.text
+
+    logging.info(f"[TG-GW] Received message from user {user_id}: '{query_text}'")
+
     # 1. Provide immediate feedback to the user that the request is being processed.
     await message.bot.send_chat_action(message.chat.id, action="typing")
 
-    # 2. TODO: Implement the actual call to the a-rag-api service.
-    #    This logic will be encapsulated in a dedicated service/client.
-    #
-    #    Example:
-    #    rag_client = RagApiClient()
-    #    try:
-    #        response_text = await rag_client.get_response(
-    #            user_id=message.from_user.id,
-    #            text=message.text
-    #        )
-    #    except Exception as e:
-    #        # Handle API errors gracefully
-    #        response_text = "Sorry, I'm having trouble connecting to my brain right now."
-
-    # Simulating the API call delay for now.
-    await asyncio.sleep(2)
-    response_text = (
-        f"A-RAG mock response for: '{message.text[:50]}...'. "
-        "The real answer will be here."
+    response_text = await rag_client.get_rag_response(
+        user_query=query_text, user_id=user_id
     )
 
-    # 3. Send the final response back to the user.
+    if not response_text:
+        response_text = "Sorry, I couldn't get a response. Please try again."
+
+    logging.info(
+        f"[TG-GW] Sending response to user {user_id}: '{response_text[:100]}...'"
+    )
+
     await message.reply(response_text)

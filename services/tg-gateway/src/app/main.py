@@ -25,6 +25,7 @@ from src.bot.features.rag_chat.router import rag_router
 
 # Middlewares
 from src.bot.middleware.db_middleware import DbSessionMiddleware
+from src.clients.rag_api_client import RagApiClient
 
 # Core services and configuration
 from src.core.config import settings
@@ -57,6 +58,7 @@ async def main() -> None:
     # 2. Initialize shared services and adapters
     db_adapter = DBAdapter()
     localize_service = Localize(default_lang="en")
+    rag_client = RagApiClient()
 
     # Create an object with default properties for the bot
     default_properties = DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -71,6 +73,7 @@ async def main() -> None:
         {
             "db_adapter": db_adapter,
             "loc": localize_service,
+            "rag_client": rag_client,
         }
     )
 

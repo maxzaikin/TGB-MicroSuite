@@ -11,6 +11,7 @@ for processing by the A-RAG service.
 from aiogram import F, Router
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.clients.rag_api_client import RagApiClient
 
 # Import the handler from the same feature slice.
 from .handler import handle_text_message
@@ -19,7 +20,9 @@ rag_router = Router(name="rag_chat_router")
 
 
 @rag_router.message(F.text, ~F.text.startswith("/"))
-async def on_text_message(message: Message, session: AsyncSession):
+async def on_text_message(
+    message: Message, session: AsyncSession, rag_client: RagApiClient
+):
     """
     Handles any incoming text message that is not a command.
 
@@ -32,4 +35,4 @@ async def on_text_message(message: Message, session: AsyncSession):
                                 (Even if not used now, it's good practice to have it ready).
     """
     # The router's job is simply to delegate the work to the handler.
-    await handle_text_message(message)
+    await handle_text_message(message, session, rag_client)

@@ -10,6 +10,7 @@ validated source of truth for all configuration parameters.
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,10 +32,20 @@ class Settings(BaseSettings):
     # e.g., "sqlite+aiosqlite:///local_gateway.db"
     DATABASE_URL: str
 
+    # --- A-RAG API Client Configuration ---
+    RAG_API_BASE_URL: str
+    RAG_API_VERSION_PREFIX: str
+    RAG_API_CHAT_ENDPOINT: str
+    RAG_API_TIMEOUT: int = Field(
+        default=30, gt=0, description="Timeout in seconds for A-RAG API requests"
+    )
+
     # --- Data Storage Configuration ---
     # The root directory for storing persistent client data (e.g., uploaded images).
     # In a Docker environment, this path will point to a mounted volume.
     DATA_VOLUME_PATH: str = "data"  # A sensible default for local dev
+
+    INTERNAL_SERVICE_API_KEY: str
 
     # --- Pydantic Model Configuration ---
     model_config = SettingsConfigDict(
