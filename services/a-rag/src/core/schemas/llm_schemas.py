@@ -43,7 +43,13 @@ class LLMResponse(BaseModel):
 
 
 class RAGRequest(BaseModel):
-    user_query: str = Field(..., min_length=1)
+    user_query: str = Field(
+        ..., min_length=1, description="The user's question or prompt."
+    )
+    user_id: str = Field(
+        ...,
+        description="A unique identifier for the user session (e.g., Telegram user ID).",
+    )
 
 
 class RAGResponse(BaseModel):

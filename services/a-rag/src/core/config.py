@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # as defined in the .env file.
     MODEL_PATH: str
 
+    # --- Redis Configuration ---
+    REDIS_HOST: str
+    REDIS_PORT: int
+
     # --- Pydantic Model Configuration ---
     model_config = SettingsConfigDict(
         # Specifies the name of the file to load environment variables from.

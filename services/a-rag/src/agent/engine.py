@@ -1,135 +1,133 @@
 """
-file: TGB-MicroSuite./services/a-rag/src/agent/engine.py
+file: services/a-rag/src/agent/engine.py
 
-Core orchestration engine for the RAG (Retrieval-Augmented Generation) pipeline.
+Core orchestration engine for generating contextual chat responses.
 
-This module contains the primary logic for loading the GGUF Language Model,
-processing a user query, constructing a prompt, and generating a final answer
-using the loaded model.
+This module contains the primary logic for:
+1. Loading the GGUF Language Model using llama-cpp-python.
+2. Constructing a structured, role-based prompt (ChatML format).
+3. Interacting with the MemoryService to retrieve and update conversation history.
+4. Generating a final answer using the loaded model.
 """
 
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-# Import the Llama class from the newly installed library
 from llama_cpp import Llama
 
-# Import our application's settings and prompt construction logic
-from .prompt_template import construct_prompt
+from core.config import settings
+from core.schemas.chat_schemas import ChatMessage
+from memory.service import MemoryService
 
-# A module-level global variable to hold the loaded LLM instance.
-# This follows a singleton-like pattern to ensure the model is loaded only once.
-llm: Optional[Llama] = None
+# --- System Prompt Definition ---
+# This defines the persona and instructions for the bot. It's a key part
+# of controlling the model's behavior.
+SYSTEM_PROMPT = "You are a helpful and friendly assistant named TGBuddy. Your answers should be concise."
 
 
 def load_llm_model() -> Optional[Llama]:
     """
-    Loads the GGUF model from the path specified in the settings.
+    Loads the GGUF model from the path specified in the application settings.
 
     This function initializes the Llama object from llama-cpp-python,
-    configuring it with parameters suitable for a RAG chat model.
-    The loaded model is stored in the global `llm` variable.
-    """
-    # global llm
-    # if llm is not None:
-    #    logging.info("LLM model is already loaded.")
-    #    return
+    configuring it with parameters suitable for a chat model.
 
-    # Use the new, absolute path property from settings.
-    model_path = r""
-    logging.info(f"Attempting to load LLM model from absolute path: {model_path}")
+    Returns:
+        An instance of the Llama model if successful, otherwise None.
+    """
+    # Get the model path from our centralized settings configuration.
+    model_path = settings.MODEL_PATH
+    logging.info(f"Attempting to load LLM model from path: {model_path}")
 
     try:
-        # Initialize the Llama model.
-        # These parameters are crucial for performance and behavior.
         llm = Llama(
-            model_path=model_path,
-            # n_ctx: The context size. 4096 is a common value.
-            n_ctx=4096,
-            # n_gpu_layers: Number of layers to offload to the GPU.
-            # -1 means offload all possible layers, which is ideal for performance.
-            # Set to 0 if you want to run on CPU only.
-            n_gpu_layers=-1,
-            # Set to True to see more detailed Llama.cpp logs.
-            verbose=False,
+            model_path=str(model_path),
+            n_ctx=4096,  # Context window size
+            n_gpu_layers=-1,  # Offload all possible layers to GPU
+            verbose=False,  # Set to True for detailed Llama.cpp logs
         )
         logging.info("LLM model loaded successfully.")
-
         return llm
-    except Exception as e:
-        logging.exception(f"Failed to load LLM model from {model_path}: {e}")
-        # llm remains None, and subsequent calls will fail until the app is restarted.
-        llm = None
-
-        return llm
+    except Exception:
+        # Use logging.exception to automatically include the traceback
+        logging.exception(f"Failed to load LLM model from {model_path}")
+        return None
 
 
-def generate_text(llm: Llama, prompt: str) -> str:
+def _build_prompt_messages(
+    history: List[ChatMessage], user_prompt: str
+) -> List[Dict[str, str]]:
     """
-    Generates text using the loaded Llama model.
+    Constructs the full message list for the LLM call in ChatML format.
 
     Args:
-        prompt: The fully constructed prompt to send to the model.
+        history: A list of previous ChatMessage objects from memory.
+        user_prompt: The current prompt from the user.
+
+    Returns:
+        A list of dictionaries, ready for the `create_chat_completion` method.
+    """
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    # Convert Pydantic models from history into dictionaries
+    messages.extend([msg.model_dump() for msg in history])
+
+    messages.append({"role": "user", "content": user_prompt})
+    return messages
+
+
+async def generate_chat_response(
+    llm: Llama,
+    memory_service: MemoryService,
+    user_id: str,
+    user_prompt: str,
+) -> str:
+    """
+    Generates a contextual chat response using conversation history from Redis.
+
+    This is the main entry point for the agent's chat logic.
+
+    Args:
+        llm: The loaded Llama model instance.
+        memory_service: The service for interacting with Redis memory.
+        user_id: The unique identifier for the user's session.
+        user_prompt: The latest prompt from the user.
 
     Returns:
         The text generated by the model.
     """
-    # if llm is None:
-    #    raise RuntimeError("LLM model is not loaded. Cannot generate text.")
+    if llm is None:
+        # This case should be handled by the API layer, but we double-check here.
+        raise RuntimeError("LLM model is not loaded. Cannot generate text.")
 
-    # Call the model to generate a response.
-    # This is a synchronous call, so we wrap it in an async function if needed elsewhere.
-    output = llm(
-        prompt,
-        max_tokens=512,  # Max tokens for the generated response.
-        stop=["USER:", "\n"],  # Stop generation when these tokens are encountered.
-        echo=False,  # Do not echo the prompt in the output.
+    logging.info(f"Generating response for user '{user_id}'...")
+
+    # 1. Retrieve typed conversation history from Redis
+    history = await memory_service.get_history(user_id)
+    logging.info(
+        f"Retrieved {len(history)} messages from history for user '{user_id}'."
     )
 
-    # The output is a dictionary. We need to extract the text from 'choices'.
-    generated_text = output["choices"][0]["text"].strip()
+    # 2. Build the structured message list
+    messages_for_llm = _build_prompt_messages(history, user_prompt)
+
+    # 3. Call the model using the create_chat_completion method
+    output = llm.create_chat_completion(
+        messages=messages_for_llm,
+        max_tokens=512,  # Limit the length of the response
+    )
+
+    generated_text = output["choices"][0]["message"]["content"].strip()
+    logging.info(f"LLM generated response: '{generated_text[:100]}...'")
+
+    # 4. Update the history in Redis with the new user message and AI response
+    await memory_service.add_message_to_history(
+        user_id=user_id, role="user", content=user_prompt
+    )
+
+    await memory_service.add_message_to_history(
+        user_id=user_id, role="assistant", content=generated_text
+    )
+    logging.info(f"Updated history for user '{user_id}'.")
+
     return generated_text
-
-
-async def process_user_query(llm: Llama, user_query: str) -> str:
-    """
-    Orchestrates the full RAG pipeline for a given user query.
-
-    This is the main asynchronous entry point for the agent's logic.
-
-    Args:
-        user_query: The raw text query from the user.
-
-    Returns:
-        A string containing the generated answer or an error message.
-    """
-    # if llm is None:
-    #    logging.error("Cannot process query because LLM model is not loaded.")
-    #    return "Sorry, the AI model is currently unavailable. Please try again later."
-
-    try:
-        # 1. Retrieval Step (currently mocked)
-        logging.info(f"Retrieving context for query: '{user_query[:50]}...'")
-        mock_context_chunks: List[str] = [
-            "Principle 1: Clean Code should be read like well-written prose.",
-            "Principle 2: A function should do one thing and do it well.",
-        ]
-
-        # 2. Prompt Construction Step
-        final_prompt = construct_prompt(
-            question=user_query, context_chunks=mock_context_chunks
-        )
-
-        # 3. Generation Step
-        logging.info("Sending prompt to LLM for generation...")
-        # Note: `llama_cpp.Llama`'s generation is a blocking, CPU/GPU-bound operation.
-        # In a high-concurrency FastAPI app, you might run this in a separate
-        # thread pool to avoid blocking the main event loop, but for now, a
-        # direct call is sufficient.
-        llm_response = generate_text(llm, final_prompt)
-        logging.info("Received response from LLM.")
-
-        return llm_response
-    except Exception as e:
-        logging.exception(f"An error occurred during RAG pipeline execution: {e}")
-        return "I'm sorry, I encountered an error while trying to generate a response."

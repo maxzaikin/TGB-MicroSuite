@@ -19,7 +19,7 @@ router = APIRouter()
 @router.post(
     "/chat/invoke",
     response_model=llm_schemas.RAGResponse,
-    summary="Invoke the RAG Agent [AUTH DISABLED]",
+    summary="Invoke the Chat Agent with Memory [AUTH DISABLED]",
 )
 async def invoke_rag_agent(
     # The dependency on the current user remains for security and logging.
@@ -45,9 +45,16 @@ async def invoke_rag_agent(
     if llm_instance is None:
         raise HTTPException(status_code=503, detail="AI model is not available")
 
+    memory_service_instance = request.app.state.memory_service
+
     # The router's job is simply to delegate the call to the engine.
-    generated_response = await rag_engine.process_user_query(
-        llm=llm_instance, user_query=request_body.user_query
+    generated_response = (
+        await rag_engine.generate_chat_response(  # <-- Вызываем новую функцию
+            llm=llm_instance,
+            memory_service=memory_service_instance,
+            user_id=request_body.user_id,
+            user_prompt=request_body.user_query,
+        )
     )
 
     # logging.info(

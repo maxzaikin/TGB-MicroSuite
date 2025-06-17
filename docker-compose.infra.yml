@@ -1,0 +1,21 @@
+# file: TGB-MicroSuite/docker-compose.infra.yml
+# This file orchestrates infrastructure services for local development.
+# The 'version' attribute is obsolete in modern Docker Compose and has been removed.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: tgb-local-redis
+    # The 'restart' policy ensures the container starts automatically with Docker.
+    restart: unless-stopped
+    ports:
+      # Binds the container's port 6379 to the same port on the host machine.
+      - "6379:6379"
+    volumes:
+      # Mounts the custom Redis config file into the container (read-only).
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      # Mounts a local directory from the host into the container's /data directory.
+      # This makes Redis data persistent across container restarts.
+      - ./volumes/redis-db:/data
+    # Specifies the command to run when the container starts.
+    command: redis-server /usr/local/etc/redis/redis.conf

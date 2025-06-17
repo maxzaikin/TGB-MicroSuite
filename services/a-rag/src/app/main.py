@@ -23,6 +23,7 @@ from api.endpoints import (
     llm_router,
 )
 from core.config import settings
+from memory.service import MemoryService
 from storage.rel_db.db_adapter import DBAdapter
 
 # Basic logging configuration
@@ -58,12 +59,18 @@ async def lifespan(tgramllm_app: FastAPI):
     tgramllm_app.state.db_adapter = db_adapter_instance
     logging.info("DBAdapter initialized and saved in tgramllm_app.state.db_adapter")
 
+    # 1. Load the LLM model
     logging.info("Loading LLM model...")
     app.state.llm = llm_engine.load_llm_model()
     if app.state.llm:
         logging.info("LLM model loaded and stored in app.state.")
     else:
         logging.error("LLM model failed to load. The application will run without it.")
+
+    # 2. Create MemoryService instance and store it in app.state
+    memory_service_instance = MemoryService()
+    app.state.memory_service = memory_service_instance
+    logging.info("MemoryService initialized.")
 
     yield
 

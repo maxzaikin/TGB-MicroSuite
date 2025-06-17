@@ -45,7 +45,8 @@ class RagApiClient:
         )
 
         # The payload now matches the new `RAGRequest` schema
-        payload = {"user_query": user_query, "user_id": user_id}
+        # payload = {"user_query": user_query, "user_id": user_id}
+        payload = {"user_query": user_query, "user_id": str(user_id)}
 
         logging.info(
             f"Sending request to A-RAG API at {endpoint_path} for user {user_id}"
