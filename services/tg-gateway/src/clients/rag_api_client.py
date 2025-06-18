@@ -69,6 +69,36 @@ class RagApiClient:
         except httpx.RequestError as e:
             logging.error(f"Failed to connect to A-RAG API: {e}")
             return "I'm having trouble connecting to my knowledge base right now."
+        
+    async def clear_user_memory(self, user_id: int) -> bool:
+        """
+        Sends a request to the a-rag-api to clear a user's memory.
+
+        Args:
+            user_id: The Telegram ID of the user.
+
+        Returns:
+            True if the operation was successful, False otherwise.
+        """
+        # The endpoint for clearing memory.
+        endpoint_path = (
+            f"{settings.RAG_API_VERSION_PREFIX}{settings.RAG_API_CLEAR_CHAT_HISTORY_ENDPOINT}{user_id}"
+        )        
+        
+        logging.info(f"Sending request to clear memory for user {user_id} at {endpoint_path}")
+        
+        try:
+            # We use the DELETE HTTP method here as it's semantically correct.
+            response = await self.client.delete(url=endpoint_path)
+            response.raise_for_status() # Will raise for 4xx/5xx status codes
+            # A 204 No Content response is a success signal.
+            return True
+        except httpx.HTTPStatusError as e:
+            logging.error(f"API returned an error on memory clear: {e.response.status_code}")
+            return False
+        except httpx.RequestError as e:
+            logging.error(f"Failed to connect to A-RAG API for memory clear: {e}")
+            return False
 
     async def close(self):
         """Closes the HTTP client sessions."""

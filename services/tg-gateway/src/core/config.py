@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     RAG_API_BASE_URL: str
     RAG_API_VERSION_PREFIX: str
     RAG_API_CHAT_ENDPOINT: str
+    RAG_API_CLEAR_CHAT_HISTORY_ENDPOINT:str
     RAG_API_TIMEOUT: int = Field(
         default=30, gt=0, description="Timeout in seconds for A-RAG API requests"
     )

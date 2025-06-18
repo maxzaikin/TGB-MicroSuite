@@ -20,6 +20,7 @@ from aiogram.enums import ParseMode
 
 # --- Application-specific Imports ---
 # Routers from feature slices
+from src.bot.features.session.router import session_router
 from src.bot.features.onboarding.router import onboarding_router
 from src.bot.features.rag_chat.router import rag_router
 
@@ -31,6 +32,7 @@ from src.clients.rag_api_client import RagApiClient
 from src.core.config import settings
 from src.core.localization import Localize
 from src.storage.rel_db.db_adapter import DBAdapter
+
 
 
 async def main() -> None:
@@ -87,6 +89,7 @@ async def main() -> None:
     # 6. Register all feature routers
     dp.include_router(onboarding_router)
     dp.include_router(rag_router)
+    dp.include_router(session_router)
     logging.info("All routers have been included.")
 
     # 7. Start the bot's polling loop
