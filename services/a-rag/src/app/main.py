@@ -21,6 +21,7 @@ from api.endpoints import (
     akey_router,
     auth_router,
     llm_router,
+    memory_router,
 )
 from core.config import settings
 from memory.service import MemoryService
@@ -115,6 +116,9 @@ app.include_router(
     akey_router.router, prefix=settings.API_V1_STR + "/api-keys", tags=["API KEYS CRUD"]
 )
 
+app.include_router(
+    memory_router.router, prefix=settings.API_V1_STR + "/memory", tags=["Memory Management"]
+)
 
 @app.get(
     "/",

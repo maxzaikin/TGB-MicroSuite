@@ -87,3 +87,14 @@ class MemoryService:
         # ltrim: Trims the list, keeping only elements from index -MAX_HISTORY_LENGTH to the end.
         # This efficiently maintains a capped-size list.
         await redis_client.ltrim(key, -MAX_HISTORY_LENGTH, -1)
+        
+    async def clear_history(self, user_id: str | int) -> None:
+        """
+        Deletes the entire conversation history for a specific user.
+
+        Args:
+            user_id: The unique identifier for the user session.
+        """
+        key = self._get_user_memory_key(user_id)
+        logging.info(f"[MEMORY] Clearing history for user '{user_id}' (key: {key}).")
+        await redis_client.delete(key)
