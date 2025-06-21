@@ -1,105 +1,161 @@
+# file: services/a-rag/src/agent/engine.py
 """
-file: services/a-rag/src/agent/engine.py
+Core orchestration engine for AI services, including LLM and RAG.
 
-Core orchestration engine for generating contextual chat responses.
-
-This module contains the primary logic for:
-1. Loading the GGUF Language Model using llama-cpp-python.
-2. Constructing a structured, role-based prompt (ChatML format).
-3. Interacting with the MemoryService to retrieve and update conversation history.
-4. Generating a final answer using the loaded model.
+This module initializes and provides access to the core AI components:
+1. The LlamaCPP model adapter for LlamaIndex.
+2. The RAG Query Engine for knowledge base retrieval.
+It exposes a single function to generate chat responses, which internally
+leverages both RAG and conversational memory.
 """
 
 import json
 import logging
-from typing import Optional
+from typing import Dict, List, Optional, Tuple
 
-from llama_cpp import Llama
+import chromadb
+from llama_index.core import VectorStoreIndex, Settings as LlamaSettings
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.llama_cpp import LlamaCPP
+from llama_index.vector_stores.chroma import ChromaVectorStore
 
 from core.config import settings
 from core.profiling import log_execution_time
+from core.schemas.chat_schemas import ChatMessage
 from memory.service import MemoryService
-
 from .prompt_constructor import build_chat_prompt
 
+# --- Global variables ---
+# These will be initialized once during the application lifespan.
+llm_adapter: Optional[LlamaCPP] = None
+query_engine: Optional[RetrieverQueryEngine] = None
 
-def load_llm_model() -> Optional[Llama]:
+
+def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQueryEngine]]:
     """
-    Loads the GGUF model from the path specified in the application settings.
+    Initializes and returns all core AI services (LLM Adapter and RAG Engine).
 
-    This function initializes the Llama object from llama-cpp-python,
-    configuring it with parameters suitable for a chat model.
+    This function is the single entry point for setting up the AI capabilities.
+    It loads the model via the LlamaCPP adapter, which makes it compatible with
+    LlamaIndex, and then builds the RAG pipeline using that adapter.
 
     Returns:
-        An instance of the Llama model if successful, otherwise None.
+        A tuple containing the LlamaCPP adapter and the RAG Query Engine.
+        Returns (None, None) if a critical error occurs during initialization.
     """
-    # Get the model path from our centralized settings configuration.
-    model_path = settings.MODEL_PATH
-    logging.info(f"Attempting to load LLM model from path: {model_path}")
-
+    logging.info("--- AI Services Initialization: START ---")
+    
+    # 1. Initialize the LlamaCPP model adapter
+    local_llm_adapter: Optional[LlamaCPP] = None
     try:
-        llm = Llama(
-            model_path=str(model_path),
-            n_ctx=4096,  # Context window size
-            n_gpu_layers=-1,  # Offload all possible layers to GPU
-            verbose=False,  # Set to True for detailed Llama.cpp logs
-        )
-        logging.info("LLM model loaded successfully.")
-        return llm
+        with log_execution_time("LLM Model Loading via LlamaCPP Adapter"):
+            # --- CRITICAL FIX HERE ---
+            # Parameters specific to the llama.cpp model (like n_gpu_layers)
+            # must be passed via the `model_kwargs` dictionary.
+            local_llm_adapter = LlamaCPP(
+                model_path=str(settings.MODEL_PATH),
+                temperature=0.7,
+                max_new_tokens=512,
+                context_window=4096,
+                # Pass model-specific kwargs here
+                model_kwargs={"n_gpu_layers": -1},
+                # Pass generation-specific kwargs here
+                # These will be used as defaults for all generation calls
+                generate_kwargs={"stop": ["\nuser:", "user:", "User:", "[INST]", "[/INST]"]},
+                verbose=True,
+            )
+        logging.info("LlamaCPP adapter and underlying model loaded successfully.")
     except Exception:
-        # Use logging.exception to automatically include the traceback
-        logging.exception(f"Failed to load LLM model from {model_path}")
-        return None
+        logging.exception("Fatal error during LlamaCPP adapter initialization. AI services will be unavailable.")
+        return None, None
+
+    # 2. Initialize the RAG Pipeline
+    local_query_engine: Optional[RetrieverQueryEngine] = None
+    try:
+        with log_execution_time("RAG Pipeline Initialization"):
+            embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+            chroma_client = chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
+            collection = chroma_client.get_collection("rag_documentation")
+            vector_store = ChromaVectorStore(chroma_collection=collection)
+            index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
+            
+            # The query engine will now use the correctly initialized adapter.
+            local_query_engine = index.as_query_engine(
+                llm=local_llm_adapter,
+                similarity_top_k=3
+            )
+        logging.info("RAG Query Engine initialized successfully.")
+    except Exception:
+        logging.exception("Failed to initialize RAG pipeline. Query engine will be unavailable.")
+        # Still return the llm_adapter so the bot can work without RAG.
+    
+    return local_llm_adapter, local_query_engine
 
 
 async def generate_chat_response(
-    llm: Llama,
-    memory_service: MemoryService,
+    llm: LlamaCPP,
     user_id: str,
     user_prompt: str,
+    memory_service: MemoryService,
+    rag_engine: Optional[RetrieverQueryEngine],
 ) -> str:
     """
-    Generates a contextual chat response using the prompt constructor and memory.
+    Generates a contextual chat response using RAG and conversation memory.
     """
-    if llm is None:
-        raise RuntimeError("LLM model is not loaded. Cannot generate text.")
+    logging.info(f"Processing chat response for user '{user_id}'...")
 
-    logging.info(f"Generating response for user '{user_id}'...")
+    # 1. RAG Retrieval Step (if the engine is available)
+    context_chunks = []
+    with log_execution_time("RAG Context Retrieval"):
+        if rag_engine:
+            try:
+                retrieval_response = await rag_engine.aquery(user_prompt)
+                context_chunks = [node.get_content() for node in retrieval_response.source_nodes]
+                logging.info(f"Retrieved {len(context_chunks)} context chunks for the query.")
+            except Exception:
+                logging.exception("Error during RAG retrieval. Proceeding without context.")
+        else:
+            logging.warning("RAG query engine not initialized, skipping knowledge base retrieval.")
 
-    # 1. Retrieve history from memory
+    # 2. Short-Term Memory Retrieval
     with log_execution_time("Redis History Retrieval"):
         history = await memory_service.get_history(user_id)
-
-    logging.info(
-        f"Retrieved {len(history)} messages from history for user '{user_id}'."
-    )
-
-    # 2. Build the final prompt using our new, sophisticated constructor
+        logging.info(f"Retrieved {len(history)} messages from history for user '{user_id}'.")
+    
+    # 3. Prompt Construction
     with log_execution_time("Prompt Construction"):
-        messages_for_llm = build_chat_prompt(history, user_prompt)
+        messages_for_llm = build_chat_prompt(
+            history=history,
+            user_prompt=user_prompt,
+            context_chunks=context_chunks
+        )
 
-    # 3. Log the final prompt design for debugging
-    prompt_design_for_log = json.dumps(messages_for_llm, indent=2, ensure_ascii=False)
+    # Log the final prompt for debugging
+    messages_as_dicts = [msg.model_dump() for msg in messages_for_llm]
+    prompt_design_for_log = json.dumps(messages_as_dicts, indent=2, ensure_ascii=False)
     logging.info(
         f"[LLM_PROMPT] Sending to LLM for user '{user_id}':\n{prompt_design_for_log}"
     )
 
-    # 4. Call the model
+    # 4. LLM Generation Step
     with log_execution_time("LLM Generation"):
-        output = llm.create_chat_completion(
-            messages=messages_for_llm,
-            max_tokens=512,
-        )
-
-    generated_text = output["choices"][0]["message"]["content"].strip()
+        response = await llm.achat(messages_for_llm)
+        generated_text = response.message.content.strip()
+        
+        
+        
+    
     logging.info(f"LLM generated response: '{generated_text[:100]}...'")
 
-    # 5. Update history (этот код остается без изменений)
-    await memory_service.add_message_to_history(
-        user_id=user_id, role="user", content=user_prompt
-    )
-    await memory_service.add_message_to_history(
-        user_id=user_id, role="assistant", content=generated_text
-    )
+    # 5. Update Short-Term Memory
+    with log_execution_time("Redis History Update"):
+        await memory_service.add_message_to_history(
+            user_id=user_id, role="user", content=user_prompt
+        )
+        await memory_service.add_message_to_history(
+            user_id=user_id, role="assistant", content=generated_text
+        )
 
     return generated_text

@@ -33,6 +33,10 @@ async def invoke_rag_agent(
     Accepts a user query, processes it through the RAG pipeline,
     and returns the generated answer.
     """
+    llm_adapter_instance = request.app.state.llm
+    memory_service_instance = request.app.state.memory_service
+    query_engine_instance = request.app.state.query_engine
+    
     if not request_body.user_query:
         raise HTTPException(
             status_code=400, detail="Field 'user_query' cannot be empty."
@@ -48,13 +52,12 @@ async def invoke_rag_agent(
     memory_service_instance = request.app.state.memory_service
 
     # The router's job is simply to delegate the call to the engine.
-    generated_response = (
-        await rag_engine.generate_chat_response(  # <-- Вызываем новую функцию
-            llm=llm_instance,
-            memory_service=memory_service_instance,
-            user_id=request_body.user_id,
-            user_prompt=request_body.user_query,
-        )
+    generated_response = await rag_engine.generate_chat_response(
+        llm=llm_adapter_instance,
+        user_id=request_body.user_id,
+        user_prompt=request_body.user_query,
+        memory_service=memory_service_instance,
+        rag_engine=query_engine_instance
     )
 
     # logging.info(

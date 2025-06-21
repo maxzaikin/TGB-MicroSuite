@@ -1,79 +1,65 @@
 # file: services/a-rag/src/agent/prompt_constructor.py
 """
 Module for constructing sophisticated, role-based prompts for the LLM.
-
-This module encapsulates the logic for prompt engineering, including the use of
-system instructions, few-shot examples, and dynamic history to create a
-context-aware and well-structured prompt in the ChatML format.
+...
 """
-
 from typing import Dict, List
+# --- ИМПОРТИРУЕМ ChatMessage ИЗ LlamaIndex, А НЕ ИЗ НАШИХ СХЕМ ---
+from llama_index.core.llms import ChatMessage, MessageRole
 
-from core.schemas.chat_schemas import ChatMessage
+# Наша собственная схема нужна только для истории из Redis
+from core.schemas.chat_schemas import ChatMessage as AppChatMessage
 
 # --- System Prompt & Persona Definition ---
-# The core identity and instructions for the model.
-# Made more direct to combat verbosity.
-SYSTEM_PROMPT = "You are TGBuddy, a helpful and direct assistant for the TGB-MicroSuite project. Provide concise, factual answers. Do not ask follow-up questions unless necessary."
+SYSTEM_PROMPT_TEMPLATE = """You are TGBuddy, a helpful and direct assistant for the TGB-MicroSuite project.
+Provide concise, factual answers based on the provided context.
+If the context does not contain the answer, say "I do not have enough information to answer that."
+
+--- CONTEXT ---
+{context_str}
+---------------
+"""
 
 # --- Few-Shot Examples ---
-# These examples teach the model the desired tone and format.
-FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
-    {"role": "user", "content": "What is your name?"},
-    {"role": "assistant", "content": "My name is TGBuddy."},
-    {"role": "user", "content": "What is TGB-MicroSuite?"},
-    {
-        "role": "assistant",
-        "content": "TGB-MicroSuite is a platform for building scalable, secure, and ethical Telegram bots using a microservices architecture.",
-    },
-    {"role": "user", "content": "How do I run the a-rag service?"},
-    {
-        "role": "assistant",
-        "content": "Navigate to `services/a-rag` and use the command `arag dev-server` after setting up the environment.",
-    },
+# Теперь мы их сразу создаем как объекты ChatMessage
+FEW_SHOT_EXAMPLES: List[ChatMessage] = [
+    ChatMessage(role=MessageRole.USER, content="What is your name?"),
+    ChatMessage(role=MessageRole.ASSISTANT, content="My name is TGBuddy."),
 ]
 
 # --- Context Separator ---
-# A new message that explicitly tells the model that the examples are over
-# and the real conversation begins now.
-CONTEXT_SEPARATOR = {
-    "role": "system",
-    "content": "--- End of examples. Now, begin the actual conversation. ---"
-}
+CONTEXT_SEPARATOR: List[ChatMessage] = [
+    ChatMessage(role=MessageRole.USER, content="Okay, I understand how you work. Let's start our conversation now."),
+    ChatMessage(role=MessageRole.ASSISTANT, content="Great! I'm ready. How can I help you?"),
+]
 
 
 def build_chat_prompt(
-    history: List[ChatMessage], user_prompt: str
-) -> List[Dict[str, str]]:
+    history: List[AppChatMessage], # Принимает наши Pydantic-объекты
+    user_prompt: str,
+    context_chunks: List[str],
+) -> List[ChatMessage]: # <-- Возвращает объекты LlamaIndex
     """
-    Constructs the full message list for the LLM call in ChatML format.
-
-    This function assembles the system prompt, few-shot examples, a context
-    separator, conversation history, and the latest user query into a single,
-    structured list of messages.
-
-    Args:
-        history: A list of previous ChatMessage objects from memory (Redis).
-        user_prompt: The current prompt from the user.
-
-    Returns:
-        A list of dictionaries, ready for the `create_chat_completion` method.
+    Constructs the full message list for the LLM call using LlamaIndex's
+    ChatMessage objects.
     """
-    # Start with the system message that defines the bot's persona.
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # 1. Format the RAG context
+    context_str = "\n\n---\n\n".join(context_chunks) if context_chunks else "No context provided."
 
-    # Add the few-shot examples to guide the model's behavior.
-    messages.extend(FEW_SHOT_EXAMPLES)
+    # 2. Inject context into the system prompt
+    final_system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context_str=context_str)
     
-    # --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ ---
-    # Add the separator message. This is a powerful signal to the model.
-    messages.append(CONTEXT_SEPARATOR)
-    # ---------------------------
-
-    # Add the recent, real conversation history from Redis.
-    messages.extend([msg.model_dump() for msg in history])
-
-    # Finally, add the current user's prompt.
-    messages.append({"role": "user", "content": user_prompt})
+    # 3. Assemble the final message list using LlamaIndex's ChatMessage
+    messages: List[ChatMessage] = [
+        ChatMessage(role=MessageRole.SYSTEM, content=final_system_prompt)
+    ]
+    messages.extend(FEW_SHOT_EXAMPLES)
+    messages.extend(CONTEXT_SEPARATOR)
+    
+    # Конвертируем нашу историю из Redis в формат LlamaIndex
+    for msg in history:
+        messages.append(ChatMessage(role=msg.role, content=msg.content))
+        
+    messages.append(ChatMessage(role=MessageRole.USER, content=user_prompt))
 
     return messages

@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     # --- Redis Configuration ---
     REDIS_HOST: str
     REDIS_PORT: int
+    
+    # --- Chroma Configuration ---
+    CHROMA_HOST: str
+    CHROMA_PORT: str
 
     # --- Pydantic Model Configuration ---
     model_config = SettingsConfigDict(
