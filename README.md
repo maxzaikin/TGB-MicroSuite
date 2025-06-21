@@ -168,15 +168,14 @@ Follow these steps to get your local environment up and running:
 * Make sure you do not use any quotes around your token  " or ' or any other.
 * Plase .env file in the same folder with dockerfile.
 
-5. **Running the Docker Container**
-    You will need to provide your Telegram Bot token as an environment variable.
+5. **Orchestrating the MicrorSuite docker infrastructure**
+    
+    ```bash
+    docker compose -f docker-compose.infra.yml up -d
+    ```
 
     ```bash
-    # Production mode (Windows environmet)
-    docker run --env-file .env -v ${PWD}/data:/app/data -d tgrambuddy-app
-
-    # Debug mode  (Windows environmet)
-    docker run --env-file .env -v ${PWD}/data:/app/data --rm -it tgrambuddy-app /bin/bash
+    docker compose -f docker-compose.infra.yml down
     ```
 
 ## ☕ Support My Work
