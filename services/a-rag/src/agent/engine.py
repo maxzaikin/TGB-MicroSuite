@@ -27,13 +27,9 @@ from core.schemas.chat_schemas import ChatMessage
 from memory.service import MemoryService
 from .prompt_constructor import build_chat_prompt
 
-# --- Global variables ---
-# These will be initialized once during the application lifespan.
-llm_adapter: Optional[LlamaCPP] = None
-query_engine: Optional[RetrieverQueryEngine] = None
 
-
-def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQueryEngine]]:
+def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQueryEngine],
+                                      Optional[MemoryService]]:
     """
     Initializes and returns all core AI services (LLM Adapter and RAG Engine).
 
@@ -51,7 +47,6 @@ def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQuer
     local_llm_adapter: Optional[LlamaCPP] = None
     try:
         with log_execution_time("LLM Model Loading via LlamaCPP Adapter"):
-            # --- CRITICAL FIX HERE ---
             # Parameters specific to the llama.cpp model (like n_gpu_layers)
             # must be passed via the `model_kwargs` dictionary.
             local_llm_adapter = LlamaCPP(
@@ -69,15 +64,25 @@ def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQuer
         logging.info("LlamaCPP adapter and underlying model loaded successfully.")
     except Exception:
         logging.exception("Fatal error during LlamaCPP adapter initialization. AI services will be unavailable.")
-        return None, None
-
-    # 2. Initialize the RAG Pipeline
+        return None, None, None
+    
+    # 2. Initialize MemoryService
+    # We check for the `tokenize` method on the tokenizer object.
+    local_memory_service: Optional[MemoryService] = None
+    
+    if hasattr(local_llm_adapter._model, "tokenizer") and callable(local_llm_adapter._model.tokenizer):
+        tokenizer_callable = local_llm_adapter._model.tokenize
+        local_memory_service = MemoryService(tokenizer=tokenizer_callable)
+    else:
+        logging.error("Tokenizer not available from LLM adapter. MemoryService could not be initialized.")
+   
+    # 3. Initialize the RAG Pipeline
     local_query_engine: Optional[RetrieverQueryEngine] = None
     try:
         with log_execution_time("RAG Pipeline Initialization"):
             embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
             chroma_client = chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
-            collection = chroma_client.get_collection("rag_documentation")
+            collection = chroma_client.get_or_create_collection("rag_documentation")
             vector_store = ChromaVectorStore(chroma_collection=collection)
             index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
             
@@ -91,7 +96,7 @@ def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQuer
         logging.exception("Failed to initialize RAG pipeline. Query engine will be unavailable.")
         # Still return the llm_adapter so the bot can work without RAG.
     
-    return local_llm_adapter, local_query_engine
+    return local_llm_adapter, local_query_engine, local_memory_service
 
 
 async def generate_chat_response(
@@ -104,6 +109,11 @@ async def generate_chat_response(
     """
     Generates a contextual chat response using RAG and conversation memory.
     """
+    if not llm or not memory_service:
+        # This check is a safeguard. The router should have already handled this.
+        raise RuntimeError("Core AI services (LLM or Memory) were not provided to generate_chat_response.")
+   
+    
     logging.info(f"Processing chat response for user '{user_id}'...")
 
     # 1. RAG Retrieval Step (if the engine is available)
@@ -142,9 +152,7 @@ async def generate_chat_response(
     # 4. LLM Generation Step
     with log_execution_time("LLM Generation"):
         response = await llm.achat(messages_for_llm)
-        generated_text = response.message.content.strip()
-        
-        
+        generated_text = response.message.content.strip()       
         
     
     logging.info(f"LLM generated response: '{generated_text[:100]}...'")

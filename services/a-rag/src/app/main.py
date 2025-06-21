@@ -49,21 +49,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logging.info("--- Initializing AI Services ---")
     with log_execution_time("Total AI Services Initialization"):
         # Вызываем одну функцию, которая возвращает оба сервиса
-        llm, rag = rag_engine.initialize_ai_services()
-        app.state.llm = llm # Это теперь LlamaCPP адаптер
-        app.state.query_engine = rag # Это RAG Query Engine
+        llm, rag, mem = rag_engine.initialize_ai_services()
+        app.state.llm = llm #  LlamaCPP adapter
+        app.state.query_engine = rag #  RAG Query Engine
+        app.state.memory_service = mem # Memory service adapter
     
     if app.state.llm:
         logging.info("LLM adapter initialized.")
     if app.state.query_engine:
         logging.info("RAG pipeline initialized.")
-
-
+    if app.state.memory_service:
+        logging.info("MemoryService (Redis) initialized.")
     
     # 3. Initialize services and store them in the app state
     # This makes them available to all request handlers via the `request.app.state`.
-    app.state.memory_service = MemoryService()
-    logging.info("MemoryService (Redis) initialized.")
+    #app.state.memory_service = MemoryService()
+    #logging.info("MemoryService (Redis) initialized.")
 
     app.state.db_adapter = DBAdapter()
     logging.info("DBAdapter (SQL) initialized.")
