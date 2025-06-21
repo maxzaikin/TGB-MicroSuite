@@ -33,7 +33,8 @@ COMMANDS: Dict[str, List[str]] = {
         "--autogenerate",
     ],
     "test": ["pytest"],
-    "dev-server": ["uvicorn", "src.app.main:app", "--reload"],
+    "dev-server": ["uvicorn", "src.app.main:app", "--reload", "--port", "8001"],
+    "ingest": ["python", "src/scripts/ingest.py"],
 }
 
 

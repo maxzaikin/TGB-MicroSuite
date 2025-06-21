@@ -40,6 +40,11 @@ dependencies = [
     "ruff>=0.11.13",
     "llama-cpp-python>=0.3.9",
     "redis[hiredis]>=6.2.0",
+    "llama-index>=0.12.42",
+    "chromadb>=1.0.13",
+    "llama-index-vector-stores-chroma>=0.4.2",
+    "llama-index-embeddings-huggingface>=0.5.4",
+    "llama-index-llms-llama-cpp>=0.4.0",
 ]
 
 [project.optional-dependencies]
