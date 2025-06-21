@@ -1,21 +1,30 @@
-# file: TGB-MicroSuite/docker-compose.infra.yml
-# This file orchestrates infrastructure services for local development.
-# The 'version' attribute is obsolete in modern Docker Compose and has been removed.
+# file: docker-compose.infra.yml
+
+version: '3.8'
 
 services:
+  # --- Redis Service for Short-Term Memory ---
   redis:
     image: redis:7-alpine
     container_name: tgb-local-redis
-    # The 'restart' policy ensures the container starts automatically with Docker.
-    restart: unless-stopped
     ports:
-      # Binds the container's port 6379 to the same port on the host machine.
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
-      # Mounts the custom Redis config file into the container (read-only).
-      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-      # Mounts a local directory from the host into the container's /data directory.
-      # This makes Redis data persistent across container restarts.
       - ./volumes/redis-db:/data
-    # Specifies the command to run when the container starts.
-    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+
+  # --- ChromaDB Service for Vector Storage (RAG) ---
+  chroma:
+    image: ghcr.io/chroma-core/chroma:1.0.13
+    container_name: tgb-local-chroma
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./volumes/rag-db:/chroma/.chroma/index
+    environment:
+      - IS_PERSISTENT=TRUE
+    restart: always
+
+volumes:
+  redis-db:
+  chroma-db:
