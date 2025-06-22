@@ -3,6 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![LlamaIndex](https://img.shields.io/badge/LlamaIndex-%F0%9F%90%AC%20llama--index-blue.svg)](https://llamaindex.ai/)
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-%F0%9F%90%8E%20C%2B%2B-green.svg)](https://github.com/ggerganov/llama.cpp)
 [![asyncio](https://img.shields.io/badge/asyncio-3.11-blue.svg)](https://docs.python.org/3/library/asyncio.html)
 [![NumPy](https://img.shields.io/badge/NumPy-v1.21-blue.svg?logo=numpy&logoColor=white)](https://numpy.org/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-v4.5.1-blue.svg?logo=opencv&logoColor=white)](https://opencv.org/)[
@@ -173,6 +175,7 @@ Follow these steps to get your local environment up and running:
     ```bash
     docker compose -f docker-compose.infra.yml up -d
     ```
+
 
     ```bash
     docker compose -f docker-compose.infra.yml down

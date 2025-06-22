@@ -1,11 +1,11 @@
-# file: services/a-rag/src/app/main.py
 """
+file: services/a-rag/src/app/main.rc.py
+
 Main entry point for the A-RAG API service's FastAPI application.
 
 This module initializes the FastAPI application, sets up middleware, manages the
 application's lifespan (startup/shutdown events), and includes all API routers.
 """
-
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -17,9 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from agent import engine as rag_engine
 from api.endpoints import akey_router, auth_router, llm_router, memory_router
 from core.config import settings
-from memory.service import MemoryService
 from storage.rel_db.db_adapter import DBAdapter
-from storage.redis_client import redis_client # Import redis_client for shutdown
+from storage.redis_client import redis_client
 from core.profiling import log_execution_time
 
 # Configure basic structured logging
@@ -27,6 +26,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
 )
+
 
 
 @asynccontextmanager
@@ -40,27 +40,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     - The MemoryService for Redis-based chat history.
     - The database adapter for relational data.
 
-    On shutdown, it gracefully closes all connections.
+    On shutdown, it gracefully closes all connections.    
     """
     # --- Application Startup ---
     logging.info(f"--- Service '{settings.PROJECT_NAME}' is starting up ---")
 
     # 1. Load the Language Model
-    logging.info("--- Initializing AI Services ---")
+    logging.info("--- Initializing AI Services ---")    
     with log_execution_time("Total AI Services Initialization"):
-        # Вызываем одну функцию, которая возвращает оба сервиса
         llm, rag, mem = rag_engine.initialize_ai_services()
-        app.state.llm = llm #  LlamaCPP adapter
-        app.state.query_engine = rag #  RAG Query Engine
-        app.state.memory_service = mem # Memory service adapter
-    
-    if app.state.llm:
+        app.state.llm_adapter = llm
+        app.state.kb_query_engine = rag
+        app.state.memory_service = mem
+
+    if app.state.llm_adapter:
         logging.info("LLM adapter initialized.")
-    if app.state.query_engine:
-        logging.info("RAG pipeline initialized.")
+    if app.state.kb_query_engine:
+        logging.info("Knowledge Base RAG pipeline initialized.")
     if app.state.memory_service:
-        logging.info("MemoryService (Redis) initialized.")
-    
+        logging.info("MemoryService (Redis & ChromaDB) initialized.")
     # 3. Initialize services and store them in the app state
     # This makes them available to all request handlers via the `request.app.state`.
     #app.state.memory_service = MemoryService()
@@ -74,7 +72,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # --- Application Shutdown ---
-    logging.info(f"--- Service '{settings.PROJECT_NAME}' is shutting down ---")
+    # logging.info(f"--- Service '{settings.PROJECT_NAME}' is shutting down ---")
 
     if hasattr(app.state, "db_adapter") and app.state.db_adapter:
         await app.state.db_adapter.close()
@@ -82,7 +80,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await redis_client.close()
     logging.info("Redis client connection closed.")
-    
+
     logging.info("--- Service shutdown complete. ---")
 
 
@@ -97,7 +95,7 @@ app = FastAPI(
 # This allows our frontend (rag-admin) to make requests to this API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to your frontend's domain
+    allow_origins=["*"], # TODO: # In production, restrict this to frontend's domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -131,6 +129,3 @@ app.include_router(
 async def read_root():
     """Root endpoint for basic health check and welcome message."""
     return {"message": f"Welcome to the {settings.PROJECT_NAME}! API docs at /docs"}
-
-# Note: The `if __name__ == "__main__"` block is removed as it's not the
-# recommended way to run a production-ready application. We use our `arag` CLI instead.

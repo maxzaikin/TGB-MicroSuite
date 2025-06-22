@@ -1,5 +1,6 @@
-# file: services/a-rag/src/agent/engine.py
 """
+file: services/a-rag/src/agent/engine.py
+
 Core orchestration engine for AI services, including LLM and RAG.
 
 This module initializes and provides access to the core AI components:
@@ -101,10 +102,10 @@ def initialize_ai_services() -> Tuple[Optional[LlamaCPP], Optional[RetrieverQuer
 
 async def generate_chat_response(
     llm: LlamaCPP,
+    memory_service: MemoryService,
+    kb_rag_engine: Optional[RetrieverQueryEngine],
     user_id: str,
     user_prompt: str,
-    memory_service: MemoryService,
-    rag_engine: Optional[RetrieverQueryEngine],
 ) -> str:
     """
     Generates a contextual chat response using RAG and conversation memory.
@@ -119,9 +120,9 @@ async def generate_chat_response(
     # 1. RAG Retrieval Step (if the engine is available)
     context_chunks = []
     with log_execution_time("RAG Context Retrieval"):
-        if rag_engine:
+        if kb_rag_engine:
             try:
-                retrieval_response = await rag_engine.aquery(user_prompt)
+                retrieval_response = await kb_rag_engine.aquery(user_prompt)
                 context_chunks = [node.get_content() for node in retrieval_response.source_nodes]
                 logging.info(f"Retrieved {len(context_chunks)} context chunks for the query.")
             except Exception:
