@@ -1,9 +1,13 @@
 """
-file: services/a-rag/src/agent/engine.rc3.py
+file: services/a-rag/src/agent/engine.rc4.py
 
 Core orchestration engine for AI services, including LLM and RAG.
 
 This module initializes and provides access to all core AI components.
+It now includes score-based filtering for RAG retrieval to improve
+prompt quality and system observability.
+
+initializes and provides access to all core AI components.
 1. The LlamaCPP model adapter for LlamaIndex.
 2. The RAG Query Engine for knowledge base retrieval.
 It exposes a single function to generate chat responses, which internally
@@ -21,6 +25,9 @@ import chromadb
 from llama_index.core import VectorStoreIndex
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.retrievers import VectorIndexRetriever
+# --- [ISSUE-25] Start of changes: Score-based RAG ---
+from llama_index.core.schema import NodeWithScore
+# --- [ISSUE-25] End of changes: Score-based RAG ---
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.llama_cpp import LlamaCPP
 from llama_index.vector_stores.chroma import ChromaVectorStore
@@ -38,10 +45,17 @@ AIEngineComponents = Tuple[
     Optional[MemoryService],
 ]
 
+# --- Constants ---
 # --- [ISSUE-23] Start of changes: Long-Term Memory ---
 KB_COLLECTION_NAME = "knowledge_base"
 CHAT_HISTORY_COLLECTION_NAME = "chat_history"
 # --- [ISSUE-23] End of changes: Long-Term Memory ---
+
+# --- [ISSUE-25] Start of changes: Score-based RAG ---
+# Defines a relevance threshold. Chunks with a score below this will be discarded.
+# This value is empirical and requires tuning. 0.7 is a robust starting point.
+RELEVANCE_THRESHOLD = 0.7
+# --- [ISSUE-25] End of changes: Score-based RAG ---
 
 
 def initialize_ai_services() -> AIEngineComponents:
@@ -63,7 +77,7 @@ def initialize_ai_services() -> AIEngineComponents:
     try:
         with log_execution_time("LLM Model Loading via LlamaCPP Adapter"):
             # Parameters specific to the llama.cpp model (like n_gpu_layers)
-            # must be passed via the `model_kwargs` dictionary.            
+            # must be passed via the `model_kwargs` dictionary.
             local_llm_adapter = LlamaCPP(
                 model_path=str(settings.MODEL_PATH),
                 temperature=0.7,
@@ -72,16 +86,15 @@ def initialize_ai_services() -> AIEngineComponents:
                 # Pass model-specific kwargs here
                 model_kwargs={"n_gpu_layers": -1},
                 # Pass generation-specific kwargs here
-                # These will be used as defaults for all generation calls
+                # These will be used as defaults for all generation calls                
                 generate_kwargs={"stop": ["\nuser:", "user:", "User:", "[INST]", "[/INST]"]},
                 verbose=True,
             )
         logging.info("LlamaCPP adapter and underlying model loaded successfully.")
     except Exception:
-        logging.exception("FATAL: LlamaCPP adapter initialization failed. AI services will be offline.")
+        logging.exception("FATAL: LlamaCPP adapter initialization failed.")
         return None, None, None
 
-    # 2. Initialize shared components for RAG and Memory
     try:
         embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
         chroma_client = chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
@@ -132,6 +145,52 @@ def initialize_ai_services() -> AIEngineComponents:
     return local_llm_adapter, kb_query_engine, local_memory_service
 
 
+# --- [ISSUE-25] Start of changes: Score-based RAG ---
+def _filter_and_log_retrieved_nodes(
+    retrieved_nodes: List[NodeWithScore],
+    source_name: str
+) -> List[str]:
+    """
+    Filters retrieved nodes by a relevance threshold and logs their scores.
+
+    This helper function improves observability by showing exactly which context
+    is being used and why, and improves prompt quality by discarding irrelevant noise.
+
+    Args:
+        retrieved_nodes: A list of NodeWithScore objects from a retriever.
+        source_name: A string identifying the source (e.g., "Knowledge Base").
+
+    Returns:
+        A list of content strings from the nodes that passed the threshold.
+    """
+    if not retrieved_nodes:
+        logging.info(f"Retrieved 0 context chunks from {source_name}.")
+        return []
+        
+    logging.info(f"Retrieved {len(retrieved_nodes)} raw context chunks from {source_name}. Filtering by score > {RELEVANCE_THRESHOLD}...")
+    
+    high_confidence_chunks = []
+    for i, node_with_score in enumerate(retrieved_nodes):
+        score = node_with_score.get_score()
+        text_preview = node_with_score.get_text()[:100].replace('\n', ' ')
+        
+        if score >= RELEVANCE_THRESHOLD:
+            logging.info(
+                f"  - [PASS] Chunk {i+1} from {source_name}: "
+                f"Score={score:.4f}, Text='{text_preview}...'"
+            )
+            high_confidence_chunks.append(node_with_score.get_content())
+        else:
+            logging.warning(
+                f"  - [DROP] Chunk {i+1} from {source_name}: "
+                f"Score={score:.4f} is below threshold. Text='{text_preview}...'"
+            )
+            
+    logging.info(f"Found {len(high_confidence_chunks)} relevant chunks from {source_name} after filtering.")
+    return high_confidence_chunks
+# --- [ISSUE-25] End of changes: Score-based RAG ---
+
+
 async def generate_chat_response(
     llm: LlamaCPP,
     memory_service: MemoryService,
@@ -147,15 +206,16 @@ async def generate_chat_response(
     
     logging.info(f"Processing chat response for user '{user_id}'...")
 
-    # --- [ISSUE-23] Start of changes: Long-Term Memory ---
+    # --- [ISSUE-25] Start of changes: Score-based RAG ---
     # 1a. RAG Retrieval from Knowledge Base
     kb_context_chunks = []
     with log_execution_time("RAG Knowledge Base Retrieval"):
         if kb_rag_engine:
             try:
-                retrieval_response = await kb_rag_engine.aquery(user_prompt)
-                kb_context_chunks = [node.get_content() for node in retrieval_response.source_nodes]
-                logging.info(f"Retrieved {len(kb_context_chunks)} context chunks from Knowledge Base.")
+                kb_retrieval_response = await kb_rag_engine.aquery(user_prompt)
+                kb_context_chunks = _filter_and_log_retrieved_nodes(
+                    kb_retrieval_response.source_nodes, "Knowledge Base"
+                )
             except Exception:
                 logging.exception("Error during Knowledge Base RAG retrieval.")
     
@@ -170,14 +230,15 @@ async def generate_chat_response(
                     vector_store_kwargs={"where": {"user_id": user_id}},
                     similarity_top_k=3,
                 )
-                retrieved_nodes = await history_retriever.aretrieve(user_prompt)
-                chat_history_chunks = [node.get_content() for node in retrieved_nodes]
-                logging.info(f"Retrieved {len(chat_history_chunks)} context chunks from Chat History.")
+                history_retrieved_nodes = await history_retriever.aretrieve(user_prompt)
+                chat_history_chunks = _filter_and_log_retrieved_nodes(
+                    history_retrieved_nodes, "Chat History"
+                )
             except Exception:
                 logging.exception("Error during Chat History RAG retrieval.")
-    # --- [ISSUE-23] End of changes: Long-Term Memory ---
+    # --- [ISSUE-25] End of changes: Score-based RAG ---
 
-    # 2. Short-Term Memory Retrieval
+    # 2. Short-Term Memory Retrieval from Redis
     with log_execution_time("Redis History Retrieval"):
         history = await memory_service.get_history(user_id)
         logging.info(f"Retrieved {len(history)} messages from short-term memory (Redis).")
