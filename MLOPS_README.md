@@ -18,11 +18,11 @@ Our MLOps capabilities are integrated directly into the `a-rag` microservice and
 ```mermaid
 graph TD
     subgraph "Developer / CI-CD"
-        A[1. Trigger Run: `uv run python pipelines/run_pipeline.py`]
+        A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
     end
 
     subgraph "ZenML Server (Docker Container)"
-        B[2. ZenML Orchestrator]
+        B["2. ZenML Orchestrator"]
     end
 
     subgraph "Execution Logic (within a-rag service)"
@@ -33,8 +33,8 @@ graph TD
     end
 
     subgraph "External Infrastructure"
-        G[Source Docs on Disk]
-        H[ChromaDB (Docker Container)]
+        G["Source Docs on Disk"]
+        H["ChromaDB (Docker Container)"]
     end
 
     A --> B
