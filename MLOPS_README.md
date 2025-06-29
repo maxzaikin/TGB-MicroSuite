@@ -17,26 +17,38 @@ Our MLOps capabilities are integrated directly into the `a-rag` microservice and
 
 ```mermaid
 graph TD
+    %% 1. Define all nodes first
+    A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
+    B["2. ZenML Orchestrator"]
+    C["@pipeline: feature_ingestion_pipeline"]
+    D["@step: load_documents"]
+    E["@step: get_vector_store"]
+    F["@step: index_documents"]
+    G["Source Docs on Disk"]
+    H["ChromaDB (Docker Container)"]
+
+    %% 2. Group nodes into subgraphs
     subgraph "Developer & CI-CD"
-        A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
+        A
     end
 
     subgraph "ZenML Server (Docker Container)"
-        B["2. ZenML Orchestrator"]
+        B
     end
 
     subgraph "Execution Logic (within a-rag service)"
-        C["@pipeline: feature_ingestion_pipeline"]
-        D["@step: load_documents"]
-        E["@step: get_vector_store"]
-        F["@step: index_documents"]
+        C
+        D
+        E
+        F
     end
 
     subgraph "External Infrastructure"
-        G["Source Docs on Disk"]
-        H["ChromaDB (Docker Container)"]
+        G
+        H
     end
 
+    %% 3. Define all connections between nodes
     A --> B
     B -->|Executes Pipeline| C
     C --> D
