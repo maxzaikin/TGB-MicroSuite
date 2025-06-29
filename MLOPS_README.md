@@ -17,7 +17,7 @@ Our MLOps capabilities are integrated directly into the `a-rag` microservice and
 
 ```mermaid
 graph TD
-    subgraph "Developer / CI-CD"
+    subgraph "Developer & CI-CD"
         A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
     end
 
@@ -38,15 +38,15 @@ graph TD
     end
 
     A --> B
-    B -- "Executes Pipeline" --> C
+    B -->|Executes Pipeline| C
     C --> D
-    D -- "Documents" --> F
+    D -->|Documents| F
     C --> E
-    E -- "VectorStore Client" --> F
+    E -->|VectorStore Client| F
     
-    D -- "Reads from" --> G
-    E -- "Connects to" --> H
-    F -- "Writes to" --> H
+    D -->|Reads from| G
+    E -->|Connects to| H
+    F -->|Writes to| H
 ```
 
 Workflow Explanation:
