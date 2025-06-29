@@ -3,11 +3,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UV Package Manager](https://img.shields.io/badge/PackageManager-UV-purple.svg)](https://pypi.org/project/uv/)
 [![Python Version](https://img.shields.io/badge/Python-3.12-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![ZenML](https://img.shields.io/badge/Orchestration-ZenML-8207e4.svg?logo=zenml&logoColor=white)](https://zenml.io/)
 [![LlamaIndex](https://img.shields.io/badge/LlamaIndex-%F0%9F%90%AC%20llama--index-blue.svg)](https://llamaindex.ai/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-%F0%9F%90%8E%20C%2B%2B-green.svg)](https://github.com/ggerganov/llama.cpp)
-[![asyncio](https://img.shields.io/badge/asyncio-3.11-blue.svg)](https://docs.python.org/3/library/asyncio.html)
-[![NumPy](https://img.shields.io/badge/NumPy-v1.21-blue.svg?logo=numpy&logoColor=white)](https://numpy.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-v4.5.1-blue.svg?logo=opencv&logoColor=white)](https://opencv.org/)[
+[![asyncio](https://img.shields.io/badge/asyncio-3.12-blue.svg)](https://docs.python.org/3/library/asyncio.html)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-blue.svg?logo=docker&logoColor=white)](https://www.docker.com/)  
 [![SQLite](https://img.shields.io/badge/SQLite-3.x-green.svg)](https://www.sqlite.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-3.x-blue.svg)](https://www.sqlalchemy.org/)
@@ -18,7 +17,6 @@
 [![npm](https://img.shields.io/badge/npm-v11.4.1-CB3837.svg?logo=npm&logoColor=white)](https://www.npmjs.com/)  
 [![Aiogram](https://img.shields.io/badge/Aiogram-3.x-brightgreen.svg?logo=telegram&logoColor=white)](https://aiogram.dev/)
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
-[![Telegram API](https://img.shields.io/badge/Telegram%20API-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 
 ## About this repository
 
@@ -35,8 +33,9 @@ This project is not just a collection of code; it's an implementation of a profe
 
 -   **Microservices Architecture:** The system is decomposed into small, independent, and loosely-coupled services. This allows for independent development, deployment, and scaling of each component.
 -   **Clean & Scalable Code:** We adhere to principles like **Feature-Sliced Design (FSD)** on the frontend and a clear service-layer separation on the backend. This ensures the codebase remains predictable and maintainable as it grows.
--   **Infrastructure as Code (IaC):** The entire application stack, including inter-service networking, is defined declaratively in a `docker-compose.yml` file. This guarantees a reproducible environment for both development and production.
+-   **Infrastructure as Code (IaC):** The entire application stack, including inter-service networking, is defined declaratively in a `docker-compose.infra.yml` file. This guarantees a reproducible environment for both development and production.
 -   **Type Safety:** We use **TypeScript** on the frontend and Python type hints with Pydantic on the backend to eliminate entire classes of runtime errors and make the code self-documenting.
+-   **MLOps First:** We treat ML processes not as ad-hoc scripts, but as versioned, reproducible, and automated pipelines managed by an orchestrator.
 
 ---
 
@@ -50,9 +49,10 @@ graph TD
     User["User's Browser"]
     TelegramAPI["Telegram API"]
     Proxy[("Reverse Proxy (Nginx)")]
-    Dashboard["llm-dashboard<br>(React UI + Nginx)"]
-    API["llm-api<br>(FastAPI)"]
-    Gateway["bot-gateway<br>(Aiogram)"]
+    Dashboard["rag-admin<br>(React UI)"]
+    API["a-rag<br>(FastAPI)"]
+    Gateway["tg-gateway<br>(Aiogram)"]
+    ZenML[("ZenML Server")]
 
     %% 2. Group nodes into subgraphs
     subgraph "External World"
@@ -65,6 +65,7 @@ graph TD
         Dashboard
         API
         Gateway
+        ZenML
     end
 
     %% 3. Define all connections between nodes
@@ -75,15 +76,24 @@ graph TD
     
     TelegramAPI -- "Webhook Events" --> Gateway
     Gateway -- "Internal API Calls / Events" --> API
+    API -- "Executes & Logs" --> ZenML
 ```
 
-1. bot-gateway (Formerly TGramBot): The entry point for all interactions from the Telegram API. This service is responsible for receiving messages and forwarding them for processing.
+1. tg-gateway: The entry point for all interactions from the Telegram API.
+2. a-rag (The Core ML Service): The "brain" of the system. It handles business logic, RAG pipelines, and interacts with the database. It also contains the MLOps pipelines.
+3. rag-admin (The Management Frontend): A modern React (SPA) application for system management.
 
-2. llm-api (The LLM Backend): The core "brain" of the system. It handles business logic, interacts with the database, and processes tasks from the bot-gateway.
+4. reverse-proxy: A central Nginx instance that acts as the single entry point for all external traffic.
 
-3. llm-dashboard (The Management Frontend): A modern React (SPA) application for managing the system, viewing data, and configuring API keys. Served by a dedicated Nginx container.
+5. zenml-server: A self-hosted MLOps orchestrator that manages, tracks, and versions all ML pipelines.
 
-4. reverse-proxy (The System's Front Door): A central Nginx instance that acts as the single entry point for all external traffic. It intelligently routes requests to the appropriate service (llm-dashboard or llm-api), handles CORS, and is responsible for SSL termination in a production environment.
+## 📦 MLOps & Orchestration
+
+To move beyond manual scripts and embrace professional ML engineering, we use ZenML as our MLOps orchestrator. This allows us to define our data processing, model evaluation, and future training tasks as formal, reproducible pipelines.
+
+[!NOTE]
+For a detailed explanation of our MLOps strategy, pipeline structure, and how to run them, please see our dedicated [MLOps README](MLOPS_README.md).
+
 
 ## 📂 Project Structure
 
@@ -181,6 +191,15 @@ Follow these steps to get your local environment up and running:
     docker compose -f docker-compose.infra.yml down
     ```
 
+6.  **Running MLOps Pipelines (Data Ingestion):**
+    To populate the RAG knowledge base, you need to run the data ingestion pipeline. This is managed by ZenML. For detailed instructions, see **[MLOPS_README.md](./MLOPS_README.md)**.
+    
+    A typical command to run the ingestion pipeline (executed from `services/a-rag`):
+    ```bash
+    # (Requires one-time setup described in MLOPS_README.md)
+    uv run python pipelines/run_pipeline.py --source-dir ../../volumes/rag-source-docs
+    ```
+    
 ## ☕ Support My Work
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-yellow?logo=kofi)](https://buymeacoffee.com/max.v.zaikin)

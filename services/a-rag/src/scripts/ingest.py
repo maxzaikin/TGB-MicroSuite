@@ -1,11 +1,15 @@
-# file: services/a-rag/src/scripts/ingest.py
 """
+file: services/a-rag/src/scripts/ingest.py
+    deprecated after implementing
+    --- [ISSUE-26] Implement ZenML for MLOps Pipeline Management ---
+
 Script to ingest and embed documents into the ChromaDB vector store.
 
 This utility is a self-contained command-line tool for populating the RAG
 knowledge base. It accepts a path to a source directory, reads all
 supported documents, and processes them into a ChromaDB collection. It is
 designed to be robust and user-friendly, providing clear feedback.
+
 """
 import argparse
 import logging
