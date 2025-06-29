@@ -20,11 +20,34 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - ./volumes/rag-db:/chroma/.chroma/index
+      # --- [ISSUE-20] Start of changes: Long-Term Memory ---
+      # This volume mapping supports the ChromaDB instance for RAG context storage.
+      # https://docs.trychroma.com/production/containers/docker
+      - ./volumes/rag-db:/data
+      # --- [ISSUE-20] End of changes: Long-Term Memory ---
+    
     environment:
       - IS_PERSISTENT=TRUE
     restart: always
 
+  # --- [ISSUE-26] Start of changes: MLOps Orchestration with ZenML ---
+  # ZenML Server for orchestrating, tracking, and versioning ML pipelines.
+  # This is a self-hosted instance using the latest stable official GHCR image.
+  zenml-server:
+    image: zenmldocker/zenml-server:0.83.1
+    container_name: tgb-local-zenml
+    ports:
+      - "127.0.0.1:8237:8080"
+    volumes:
+      # https://docs.zenml.io/deploying-zenml/deploying-zenml/deploy-with-docker
+      - ./volumes/zenml-db:/zenml/.zenconfig/local_stores/default_zen_store
+
+    restart: always
+  # --- [ISSUE-26] End of changes: MLOps Orchestration with ZenML ---
 volumes:
   redis-db:
-  chroma-db:
+  rag-db:  
+  # --- [ISSUE-26] Start of changes: MLOps Orchestration with ZenML ---
+  # Named volume for ZenML Server data persistence.
+  zenml-db:
+  # --- [ISSUE-26] End of changes: MLOps Orchestration with ZenML ---
