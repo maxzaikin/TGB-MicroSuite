@@ -17,38 +17,26 @@ Our MLOps capabilities are integrated directly into the `a-rag` microservice and
 
 ```mermaid
 graph TD
-    %% 1. Define all nodes first
-    A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
-    B["2. ZenML Orchestrator"]
-    C["@pipeline: feature_ingestion_pipeline"]
-    D["@step: load_documents"]
-    E["@step: get_vector_store"]
-    F["@step: index_documents"]
-    G["Source Docs on Disk"]
-    H["ChromaDB (Docker Container)"]
-
-    %% 2. Group nodes into subgraphs
     subgraph "Developer & CI-CD"
-        A
+        A["1. Trigger Run: `uv run python pipelines/run_pipeline.py`"]
     end
 
     subgraph "ZenML Server (Docker Container)"
-        B
+        B["2. ZenML Orchestrator"]
     end
 
     subgraph "Execution Logic (within a-rag service)"
-        C
-        D
-        E
-        F
+        C["@pipeline: feature_ingestion_pipeline"]
+        D["@step: load_documents"]
+        E["@step: get_vector_store"]
+        F["@step: index_documents"]
     end
 
     subgraph "External Infrastructure"
-        G
-        H
+        G["Source Docs on Disk"]
+        H["ChromaDB (Docker Container)"]
     end
 
-    %% 3. Define all connections between nodes
     A --> B
     B -->|Executes Pipeline| C
     C --> D
@@ -79,37 +67,56 @@ Workflow Explanation:
 
     All results, logs, and artifacts are tracked by the ZenML Server and visible in the UI.
 
-🛠️ How to Use the Pipelines
-Prerequisites
 
-1. Infrastructure Must Be Running: Ensure all services are running by executing docker-compose -f docker-compose.infra.yml up -d from the project root.
+## 🛠️ Setup & Configuration
 
-2. Dependencies Installed: Navigate to services/a-rag and install the Python dependencies:
+### Step 1: Launch Core Infrastructure
+
+From the project root, ensure all services are running. This command starts ChromaDB, Redis, and our ZenML Server.
+
+```bash
+docker-compose -f docker-compose.infra.yml up -d
+```
+
+### Step 2: Set Up the a-rag Service Environment
+
+Navigate to the a-rag service directory. All subsequent commands should be run from here. Then, activate its virtual environment and install dependencies.
 
 ```bash
 cd services/a-rag
-uv venv  # Create virtual env if not present
+
+# Create/activate virtual environment
+uv venv
 source .venv/bin/activate
+
+# Install dependencies
 uv pip sync pyproject.toml
 ```
 
-3. Connect to ZenML Server (One-time setup):
-You only need to do this once. This command tells your local ZenML client where the server is.
+### Step 3: Connect Your Local Client to the ZenML Server (One-Time Setup)
+
+**This is a critical one-time setup step**. You must connect your local ZenML client (which you just installed) to the ZenML Server running in Docker. This tells your client where to send all pipeline information.
+
+Once this is done, the configuration is saved locally, and all future pipeline runs will automatically be sent to and tracked by your local server.
 
 ```bash
-zenml connect --url http://localhost:8237 --username default
+# Ensure your (a-rag) venv is active
+(a-rag) $ zenml connect --url http://127.0.0.1:8237 --username default
 ```
+[!NOTE]
+The zenml connect command is being deprecated. You might see a warning suggesting to use zenml login. In recent versions, zenml connect might automatically open a browser window for authentication. Simply follow the on-screen instructions. A successful connection is the end goal.
 
-## Running the Feature Ingestion Pipeline
+You should see a confirmation message like: ✅ Successfully connected to ZenML server.
+
+
+## ▶️ Running the Feature Ingestion Pipeline
 
 This pipeline is the replacement for the old ingest.py script. It loads documents from a directory and indexes them into ChromaDB.
 
 To run the pipeline, use the pipelines/run_pipeline.py script from within the services/a-rag directory.
 
 ```bash
-uv run python pipelines/run_pipeline.py \
-    --source-dir ../../volumes/rag-source-docs \
-    --collection my_new_collection
+uv run python -m  pipelines.run_pipeline --source-dir ../../volumes/rag-source-docs  --collection rag_documentation_docker
 ```
 
 Arguments:

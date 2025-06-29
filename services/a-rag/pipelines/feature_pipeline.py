@@ -12,10 +12,10 @@ knowledge base.
 from pathlib import Path
 from zenml import pipeline
 
-# Import the steps from our steps module
+# Import the steps from our steps module using explicit relative imports.
 from .steps.data_processing import (
-    index_documents_in_vector_store,
-    get_vector_store,
+    ensure_vector_store_exists,
+    index_documents,
     load_documents,
 )
 
@@ -24,9 +24,9 @@ from .steps.data_processing import (
 def feature_ingestion_pipeline(source_dir: Path, collection_name: str):
     """
     The feature ingestion pipeline for our RAG system.
-
-    This ZenML pipeline defines the Directed Acyclic Graph (DAG) for processing
-    source documents and indexing them into our vector store.
+    
+    This version is more robust, passing simple data types between steps
+    instead of complex, non-serializable objects.
 
     Args:
         source_dir: Path to the source directory containing documents.
@@ -39,11 +39,15 @@ def feature_ingestion_pipeline(source_dir: Path, collection_name: str):
     # Step 1: Load documents from the source directory.
     documents = load_documents(source_dir=source_dir)
 
-    # Step 2: Get a connection to our vector store.
-    vector_store = get_vector_store(collection_name=collection_name)
+    # Step 2: Ensure the vector database is available and the collection exists.
+    # This step must complete before indexing can begin.
+    validated_collection_name = ensure_vector_store_exists(
+        collection_name=collection_name
+    )
 
-    # Step 3: Index the loaded documents into the vector store.
-    # This step depends on the outputs of the previous two steps.
-    index_documents_in_vector_store(
-        documents=documents, vector_store=vector_store
+    # Step 3: Index the documents into the validated collection.
+    # This step depends on the outputs of `load_documents` and `ensure_vector_store_exists`.
+    # ZenML understands this dependency graph automatically.
+    index_documents(
+        documents=documents, collection_name=validated_collection_name
     )

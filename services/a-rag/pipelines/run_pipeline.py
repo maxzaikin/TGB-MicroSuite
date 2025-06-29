@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 
 # Import the pipeline definition
-from feature_pipeline import feature_ingestion_pipeline
+from .feature_pipeline import feature_ingestion_pipeline
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
