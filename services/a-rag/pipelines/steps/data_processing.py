@@ -10,6 +10,7 @@ of our MLOps pipelines. Each function is decorated as a @step, allowing ZenML
 to orchestrate, track, and version its execution and artifacts.
 """
 
+import os
 import logging
 from pathlib import Path
 from typing import List, Annotated
@@ -30,17 +31,15 @@ from src.core.config import settings
 # Configure logging for this module
 logger = logging.getLogger(__name__)
 
-
 @step
 def load_documents(
     source_dir: Path,
 ) -> Annotated[List[Document], "loaded_documents"]:
     """
-    ZenML step to load documents from a specified directory.
+    ZenML step to load documents and enrich the output artifact with metadata.
 
-    This step is responsible for the first stage of the pipeline: data loading.
-    It encapsulates the file reading logic and handles common errors like
-    an empty or non-existent directory.
+    This step loads data from a directory and attaches key metadata to the
+    resulting ZenML artifact, providing full traceability and observability.
 
     Args:
         source_dir: The path to the directory containing source documents.
@@ -50,8 +49,6 @@ def load_documents(
     """
     logger.info(f"Executing step: load_documents from {source_dir}")
     if not source_dir.is_dir():
-        # ZenML will automatically catch this exception and fail the step,
-        # providing clear error feedback in the dashboard.
         raise FileNotFoundError(
             f"Source directory not found at {source_dir.resolve()}"
         )
@@ -60,21 +57,60 @@ def load_documents(
         reader = SimpleDirectoryReader(input_dir=source_dir, recursive=True)
         documents = reader.load_data()
         if not documents:
-            # It's better to raise a specific error for an empty directory
-            # so the pipeline can be stopped gracefully.
             raise ValueError(
                 f"No documents found in source directory: {source_dir.resolve()}"
             )
         logger.info(f"Successfully loaded {len(documents)} document(s).")
+
+        # --- [MLOps] Start of Metadata Enrichment ---
+
+        # 1. Получаем контекст текущего шага пайплайна.
+        step_context = get_step_context()
+
+        # 2. Извлекаем и вычисляем полезные метаданные.
+        # LlamaIndex сохраняет путь к файлу в `metadata['file_path']`
+        # или `metadata['file_name']`. Мы проверим оба варианта.
+        loaded_filenames = [
+            doc.metadata.get("file_path") or doc.metadata.get("file_name", "unknown") 
+            for doc in documents
+        ]
+        
+        # Убираем дубликаты, если один файл был разбит на несколько документов
+        unique_filenames = sorted(list(set(loaded_filenames)))
+
+        # Вычисляем общий размер загруженных файлов
+        total_size_bytes = sum(
+            os.path.getsize(f) for f in unique_filenames if os.path.exists(f)
+        )
+
+        # 3. Собираем все метаданные в один словарь.
+        # Мы можем логировать все, что считаем важным.
+        loading_metadata = {
+            "source_directory": str(source_dir.resolve()),
+            "num_documents_loaded": len(documents),
+            "num_files_loaded": len(unique_filenames),
+            "loaded_files": unique_filenames,
+            "total_size_bytes": total_size_bytes,
+        }
+        
+        # 4. "Прикрепляем" словарь с метаданными к нашему выходному артефакту.
+        # Имя 'output_name' должно совпадать с именем в аннотации типа: "loaded_documents".
+        step_context.add_output_metadata(
+            output_name="loaded_documents",
+            metadata=loading_metadata
+        )
+        logger.info("Successfully attached metadata to the output artifact.")
+
+        # --- [MLOps] End of Metadata Enrichment ---
+
         return documents
+
     except ValueError as e:
         logger.error(f"Failed to load documents: {e}")
-        # Re-raise to ensure the pipeline fails with a clear message.
         raise
     except Exception as e:
         logger.error(f"An unexpected error occurred during document loading: {e}")
         raise
-
 
 @step
 def ensure_vector_store_exists(

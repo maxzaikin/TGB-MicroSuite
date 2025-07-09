@@ -59,7 +59,7 @@ services:
 
       # 🔥 Critical: absolute path for full compatibility with pipeline host writes
       # Left part is path on a host system (WSL) : Right path is path inside docker
-      - /home/[]/projects/TGB-MicroSuite/volumes/zenml-db:/home/zai11972/projects/TGB-MicroSuite/volumes/zenml-db
+      - /home/[user_name]]/projects/TGB-MicroSuite/volumes/zenml-db:/home/[user_name]/projects/TGB-MicroSuite/volumes/zenml-db
 
     restart: always
   # --- [ISSUE-26] End of changes: MLOps Orchestration with ZenML ---

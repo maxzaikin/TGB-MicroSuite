@@ -101,7 +101,7 @@ Once this is done, the configuration is saved locally, and all future pipeline r
 
 ```bash
 # Ensure your (a-rag) venv is active
-(a-rag) $ zenml connect --url http://127.0.0.1:8237 --username default
+(a-rag) $ ды
 ```
 [!NOTE]
 The zenml connect command is being deprecated. You might see a warning suggesting to use zenml login. In recent versions, zenml connect might automatically open a browser window for authentication. Simply follow the on-screen instructions. A successful connection is the end goal.
@@ -116,7 +116,7 @@ This pipeline is the replacement for the old ingest.py script. It loads document
 To run the pipeline, use the pipelines/run_pipeline.py script from within the services/a-rag directory.
 
 ```bash
-uv run python -m  pipelines.run_pipeline --source-dir ../../volumes/rag-source-docs  --collection rag_documentation_docker
+(a-rag) uv run python -m  pipelines.run_pipeline --source-dir ../../volumes/rag-source-docs  --collection rag_documentation_docker
 ```
 
 Arguments:
@@ -136,3 +136,37 @@ After triggering a run, you can monitor its progress in real-time:
     You will see your rag_feature_ingestion_pipeline run. Click on it to see the graph, check the status of each step, and view detailed logs.
 
 This setup provides a robust, professional framework for managing our ML workflows.
+
+```bash
+zenml stack describe
+zenml artifact-store describe default
+```
+
+**Create newartifacts store**
+zenml artifact-store register local_store_docker \
+  --flavor local \
+  --path=/home/zai11972/projects/TGB-MicroSuite/volumes/zenml-db
+
+**Create new Stack with new store**
+zenml stack register local_stack_docker \
+  --artifact-store=local_store_docker \
+  --orchestrator=default
+
+zenml stack set local_stack_docker
+
+docker exec -it tgb-local-zenml /bin/bash
+
+(a-rag) zai11972@Descartes:~/projects/TGB-MicroSuite/services/a-rag$ python -m pipelines.run_pipeline   --source-dir ../../volumes/zenml-db/rag-source-docs   --collection rag_documentation_docker
+
+zenml connect --url http://127.0.0.1:8237 --username default
+
+ # ZenML database and metadata store
+      - ./volumes/zenml-db:/zenml/.zenconfig/local_stores/default_zen_store
+      - ./volumes/zenml-db:/home/zenml/.config/zenml
+
+      # Folder with documents (must be accessible for ingestion)
+      - ./volumes/zenml-db/rag-source-docs:/rag-source-docs
+
+      # 🔥 Critical: absolute path for full compatibility with pipeline host writes
+      # Left part is path on a host system (WSL) : Right path is path inside docker
+      - /home/[your_user_name]]/projects/TGB-MicroSuite/volumes/zenml-db:/home/[your_user_name]/projects/TGB-MicroSuite/volumes/zenml-db
