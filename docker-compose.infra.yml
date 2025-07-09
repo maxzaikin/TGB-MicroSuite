@@ -3,70 +3,63 @@
 version: '3.8'
 
 services:
-  # --- Redis Service for Short-Term Memory ---
+  # --- Common Infrastructure Services ---
   redis:
     image: redis:7-alpine
     container_name: tgb-local-redis
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
-      - ./volumes/redis-db:/data
+      - redis-db:/data
     restart: always
 
-  # --- ChromaDB Service for Vector Storage (RAG) ---
+  # --- MLOps Orchestration & Tracking ---
+  # [ISSUE-26] ZenML Server for orchestrating pipelines.
+  zenml-server:
+    image: ghcr.io/zenml-io/zenml-server:0.57.0 # Pinned to a specific version for stability.
+    container_name: tgb-local-zenml
+    ports:
+      - "127.0.0.1:8237:8080"
+    volumes:
+      - zenml-data:/app/zenml
+      - ./volumes/rag-source-docs:/rag-source-docs
+    restart: always
+
+  # --- [ISSUE-28] Start of changes: Vector DB Migration ---
+  # Vector DB services are now managed via profiles.
+  # Qdrant is the new default, Chroma is the fallback.
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    container_name: tgb-local-qdrant
+    ports:
+      - "127.0.0.1:6333:6333" # gRPC port
+      - "127.0.0.1:6334:6334" # REST port
+    volumes:
+      - qdrant-data:/qdrant/storage
+    profiles:
+      - qdrant
+    restart: always
+
   chroma:
     image: ghcr.io/chroma-core/chroma:1.0.13
     container_name: tgb-local-chroma
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      # --- [ISSUE-20] Start of changes: Long-Term Memory ---
-      # This volume mapping supports the ChromaDB instance for RAG context storage.
-      # https://docs.trychroma.com/production/containers/docker
-      - ./volumes/rag-db:/data
-      # --- [ISSUE-20] End of changes: Long-Term Memory ---
-    
+      - chroma-data:/chroma/.chroma/index
     environment:
       - IS_PERSISTENT=TRUE
+    profiles:
+      - chroma
     restart: always
+  # --- [ISSUE-28] End of changes: Vector DB Migration ---
 
-  # --- [ISSUE-26] Start of changes: MLOps Orchestration with ZenML ---
-  # ZenML Server for orchestrating, tracking, and versioning ML pipelines.
-  # This is a self-hosted instance using the latest stable official GHCR image.
-  zenml-server:
-    image: zenmldocker/zenml-server:0.83.1
-    container_name: tgb-local-zenml
-    ports:
-      - "127.0.0.1:8237:8080"
-    volumes:
-      # https://docs.zenml.io/deploying-zenml/deploying-zenml/deploy-with-docker
-      
-      # Maps the local ZenML database and metadata storage folder to the container's default ZenML local store path.
-      #- ./volumes/zenml-db:/zenml/.zenconfig/local_stores/default_zen_store
-      
-      # Maps the local ZenML configuration directory to the container's home directory config path for ZenML user settings.
-      #- ./volumes/zenml-db:/home/zenml/.config/zenml
-      
-      # Maps the local folder containing source documents to the container path where documents are read from during ingestion.
-      #- ./volumes/zenml-db/rag-source-docs:/rag-source-docs
-
-      # ZenML database and metadata store
-      - ./volumes/zenml-db:/zenml/.zenconfig/local_stores/default_zen_store
-      - ./volumes/zenml-db:/home/zenml/.config/zenml
-
-      # Folder with documents (must be accessible for ingestion)
-      - ./volumes/zenml-db/rag-source-docs:/rag-source-docs
-
-      # 🔥 Critical: absolute path for full compatibility with pipeline host writes
-      # Left part is path on a host system (WSL) : Right path is path inside docker
-      - /home/[]/projects/TGB-MicroSuite/volumes/zenml-db:/home/zai11972/projects/TGB-MicroSuite/volumes/zenml-db
-
-    restart: always
-  # --- [ISSUE-26] End of changes: MLOps Orchestration with ZenML ---
 volumes:
   redis-db:
-  rag-db:  
-  # --- [ISSUE-26] Start of changes: MLOps Orchestration with ZenML ---
-  # Named volume for ZenML Server data persistence.
-  zenml-db:
-  # --- [ISSUE-26] End of changes: MLOps Orchestration with ZenML ---
+  zenml-data:
+  
+  # --- [ISSUE-28] Start of changes: Vector DB Migration ---
+  qdrant-data:
+  chroma-data:
+  # --- [ISSUE-28] End of changes: Vector DB Migration ---
