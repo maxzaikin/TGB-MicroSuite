@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 # --- Import our engine ---
 from agent import engine
-from agent.prompt_template import construct_prompt
+from agent.prompt_templates import construct_prompt
 
 
 async def run_test():

@@ -1,44 +1,31 @@
+# services/a-rag/src/agent/prompt_constructor.py
+
 """
-file: services/a-rag/src/agent/prompt_constructor.rc.py
-
 Module for constructing sophisticated, role-based prompts for the LLM.
-
-This module encapsulates the logic for prompt engineering. It assembles a
-multi-context prompt by combining:
-1. A base system instruction (persona).
-2. Factual context retrieved from the knowledge base (RAG on documents).
-3. Relevant conversational context from past messages (RAG on chat history).
-4. Few-shot examples to guide response style.
-5. The immediate short-term chat history (from Redis).
-6. The latest user query.
+This version uses a much stricter system prompt for contextual answers
+to reduce hallucinations and force the model to rely on provided text.
 """
 from typing import Dict, List
 
-from llama_index.core.llms import ChatMessage, MessageRole
-from core.schemas.chat_schemas import ChatMessage as AppChatMessage
+# We will use OpenAI's standard MessageRole strings directly
+from llama_index.core.llms import MessageRole
+
+from src.core.schemas.chat_schemas import ChatMessage as AppChatMessage
 
 # --- Base System Prompt & Persona Definition ---
-BASE_SYSTEM_PROMPT = "You are TGBuddy, a helpful and direct assistant for the TGB-MicroSuite project. Provide concise, factual answers based on the provided context."
+BASE_SYSTEM_PROMPT = "You are TGBuddy, a helpful and direct assistant for the TGB-MicroSuite project."
 
-# --- Few-Shot Examples ---
-FEW_SHOT_EXAMPLES: List[ChatMessage] = [
-    ChatMessage(role=MessageRole.USER, content="What is your name?"),
-    ChatMessage(role=MessageRole.ASSISTANT, content="My name is TGBuddy."),
+# --- Few-Shot Examples for priming conversation ---
+# Now defined as a list of dictionaries, the expected API format.
+FEW_SHOT_EXAMPLES: List[Dict[str, str]] = [
+    {"role": MessageRole.USER.value, "content": "What is your name?"},
+    {"role": MessageRole.ASSISTANT.value, "content": "My name is TGBuddy."},
 ]
-
-# --- Context Separator ---
-CONTEXT_SEPARATOR: List[ChatMessage] = [
-    ChatMessage(role=MessageRole.USER, content="Okay, I understand the instructions. Let's start our conversation now."),
-    ChatMessage(role=MessageRole.ASSISTANT, content="Great! I'm ready. How can I help you?"),
-]
-
-# --- [ISSUE-23] Start of changes: Multi-Context Prompting ---
 
 def _format_context_block(title: str, chunks: List[str]) -> str:
-    """Helper function to format a list of context chunks into a string block."""
+    """Helper to format a list of text chunks into a single block."""
     if not chunks:
         return ""
-    # Joins chunks with a clear separator and adds a title.
     return f"--- {title.upper()} ---\n" + "\n\n".join(chunks)
 
 def build_chat_prompt(
@@ -46,50 +33,55 @@ def build_chat_prompt(
     user_prompt: str,
     kb_context_chunks: List[str],
     chat_context_chunks: List[str],
-) -> List[ChatMessage]:
+) -> List[Dict[str, str]]:
     """
-    Constructs the full message list for the LLM call using multiple context sources.
-
-    Args:
-        history: A list of recent ChatMessage objects from short-term memory (Redis).
-        user_prompt: The current prompt from the user.
-        kb_context_chunks: A list of relevant text chunks from the knowledge base.
-        chat_context_chunks: A list of relevant text chunks from the long-term chat history.
-
-    Returns:
-        A list of LlamaIndex's ChatMessage objects, ready for the LLM.
+    Constructs a list of message dictionaries compliant with the OpenAI API format.
     """
-    # 1. Format the retrieved context blocks.
-    kb_context_str = _format_context_block("CONTEXT FROM KNOWLEDGE BASE", kb_context_chunks)
-    chat_history_context_str = _format_context_block("RELEVANT PAST MESSAGES", chat_context_chunks)
-
-    # 2. Dynamically build the final system prompt.
     system_prompt_parts = [BASE_SYSTEM_PROMPT]
-    if kb_context_str:
+    
+    if kb_context_chunks:
+        # This part for the RAG response is already strict and works well.
+        contextual_instruction = """You are a machine that answers questions based ONLY on the provided text.
+1. Read the user's question carefully.
+2. Read the provided context carefully.
+3. Your answer MUST be extracted or synthesized directly from the context.
+4. DO NOT use any external or pre-existing knowledge.
+5. If the answer is not in the context, you MUST state: 'The provided context does not contain the answer to this question.'
+"""
+        system_prompt_parts.append(contextual_instruction)
+        
+        kb_context_str = _format_context_block("CONTEXT", kb_context_chunks)
         system_prompt_parts.append(kb_context_str)
-    if chat_history_context_str:
-        system_prompt_parts.append(chat_history_context_str)
-    
-    # Add a closing instruction if any context was provided.
-    if kb_context_str or chat_history_context_str:
-        system_prompt_parts.append("Based on the context above, answer the user's question.")
-    
+    else:
+        # --- [FIX] Implement strict guardrails for the LLM-only (no-context) case ---
+        # Instead of allowing general knowledge, we instruct the model to be cautious
+        # and admit when it doesn't know the answer, especially for specific topics.
+        non_contextual_instruction = """You are answering without access to the internal knowledge base.
+Follow these rules strictly:
+1. If the user asks a general knowledge question (e.g., 'What is the capital of France?'), answer it concisely.
+2. If the user asks a question that seems specific to a particular domain, standard, or internal project (like IEC 62443, TGB-MicroSuite, CSMS), you MUST assume you do not have the detailed information.
+3. In that case, you MUST respond with: 'I do not have access to the specific knowledge base to answer this question accurately.'
+4. DO NOT attempt to guess or generate a detailed answer for specific, technical, or project-related questions. Prioritize accuracy and honesty over being helpful.
+"""
+        system_prompt_parts.append(non_contextual_instruction)
+        # --- End of fix ---
+
     final_system_prompt = "\n\n".join(system_prompt_parts)
 
-    # 3. Assemble the final message list.
-    messages: List[ChatMessage] = [
-        ChatMessage(role=MessageRole.SYSTEM, content=final_system_prompt)
+    messages: List[Dict[str, str]] = [
+        {"role": MessageRole.SYSTEM.value, "content": final_system_prompt}
     ]
-    messages.extend(FEW_SHOT_EXAMPLES)
-    messages.extend(CONTEXT_SEPARATOR)
     
-    # Convert our app's ChatMessage history to LlamaIndex's ChatMessage objects.
+    # Few-shot examples are good for general conversation, let's keep them for the LLM-only case.
+    if not kb_context_chunks:
+        messages.extend(FEW_SHOT_EXAMPLES)
+
+    # Add conversation history.
     for msg in history:
-        # Ensure role is a valid MessageRole enum member
-        role_enum = MessageRole(msg.role)
-        messages.append(ChatMessage(role=role_enum, content=msg.content))
+        content = msg.content if msg.content is not None else ""
+        messages.append({"role": msg.role, "content": content})
         
-    messages.append(ChatMessage(role=MessageRole.USER, content=user_prompt))
+    # Add the current user prompt.
+    messages.append({"role": MessageRole.USER.value, "content": user_prompt})
 
     return messages
-# --- [ISSUE-23] End of changes: Multi-Context Prompting ---

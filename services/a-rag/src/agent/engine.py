@@ -1,276 +1,202 @@
+# file: services/a-rag/src/agent/engine.py
+
 """
-file: services/a-rag/src/agent/engine.rc4.py
-
-Core orchestration engine for AI services, including LLM and RAG.
-
-This module initializes and provides access to all core AI components.
-It now includes score-based filtering for RAG retrieval to improve
-prompt quality and system observability.
-
-initializes and provides access to all core AI components.
-1. The LlamaCPP model adapter for LlamaIndex.
-2. The RAG Query Engine for knowledge base retrieval.
-It exposes a single function to generate chat responses, which internally
-leverages both RAG and conversational memory.
-
-It now manages two distinct RAG pipelines:
-1. Knowledge Base RAG: For retrieving factual information from documents.
-2. Chat History RAG: For retrieving relevant past messages for associative memory.
+Core orchestration engine for AI services, including the advanced RAG pipeline.
+This version interacts with the LLM via a dedicated inference server.
 """
-import json
+import asyncio
 import logging
+import json
 from typing import Dict, List, Optional, Tuple
 
-import chromadb
-from llama_index.core import VectorStoreIndex
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.retrievers import VectorIndexRetriever
-# --- [ISSUE-25] Start of changes: Score-based RAG ---
-from llama_index.core.schema import NodeWithScore
-# --- [ISSUE-25] End of changes: Score-based RAG ---
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.llama_cpp import LlamaCPP
-from llama_index.vector_stores.chroma import ChromaVectorStore
+from openai import AsyncOpenAI
 
-from core.config import settings
-from core.profiling import log_execution_time
-from core.schemas.chat_schemas import ChatMessage
-from memory.service import MemoryService
-from .prompt_constructor import build_chat_prompt
+from src.agent import prompt_constructor, rag_steps
+from src.core.config import settings
+from src.core.profiling import log_execution_time
+from src.core.schemas.rag_schemas import LoadedDocument, RAGQuery
+from src.memory.service import MemoryService
+from src.models.embedding_service import embedding_model_service
+from src.storage.vec_db.base import VectorStoreRepository
+from src.storage.vec_db.factory import get_vector_store_repository
 
-# --- Type Aliases for clarity ---
-AIEngineComponents = Tuple[
-    Optional[LlamaCPP],
-    Optional[RetrieverQueryEngine],
-    Optional[MemoryService],
-]
-
-# --- Constants ---
-# --- [ISSUE-23] Start of changes: Long-Term Memory ---
+AIEngineComponents = Tuple[Optional["RAGEngine"], Optional[MemoryService]]
 KB_COLLECTION_NAME = "knowledge_base"
 CHAT_HISTORY_COLLECTION_NAME = "chat_history"
-# --- [ISSUE-23] End of changes: Long-Term Memory ---
+logger = logging.getLogger(__name__)
 
-# --- [ISSUE-25] Start of changes: Score-based RAG ---
-# Defines a relevance threshold. Chunks with a score below this will be discarded.
-# This value is empirical and requires tuning. 0.7 is a robust starting point.
-RELEVANCE_THRESHOLD = 0.7
-# --- [ISSUE-25] End of changes: Score-based RAG ---
+
+class RAGEngine:
+    """Orchestrates the advanced RAG pipeline using an external LLM service."""
+
+    def __init__(
+        self,
+        llm_client: AsyncOpenAI,
+        memory_service: MemoryService,
+        kb_vector_store: VectorStoreRepository,
+        chat_history_vector_store: VectorStoreRepository,
+    ):
+        """Initializes the RAGEngine with all its dependencies."""
+        self.llm_client = llm_client
+        self.memory = memory_service
+        self.kb_vector_store = kb_vector_store
+        self.chat_history_vector_store = chat_history_vector_store
+        self.query_expansion = rag_steps.QueryExpansionStep(llm_client=self.llm_client)
+        self.self_query = rag_steps.SelfQueryStep()
+        self.reranker = rag_steps.CrossEncoderReranker()
+        
+
+    @log_execution_time("Full RAG Context Retrieval")
+    async def _retrieve_context(self, user_prompt: str) -> List[LoadedDocument]:
+        """Executes the full retrieval pipeline with hybrid search and a robust fallback."""
+        rag_query = RAGQuery(original_query=user_prompt)
+        rag_query = await self.query_expansion.transform(rag_query)
+        rag_query = await self.self_query.transform(rag_query)
+
+        search_queries = rag_query.get_queries_for_search()
+        
+        # --- [FIX] Correct implementation of the fallback logic ---
+        candidate_docs_map = {}
+        # 1. First, try searching with the extracted filters if they exist.
+        if rag_query.filters:
+            logger.info(f"Attempting search with filters: {rag_query.filters}")
+            search_tasks_with_filters = [
+                self.kb_vector_store.search(
+                    query_text=q,
+                    query_embedding=embedding_model_service.get_embedding(q),
+                    top_k=10,
+                    filters=rag_query.filters,
+                )
+                for q in search_queries
+            ]
+            results_from_searches = await asyncio.gather(*search_tasks_with_filters)
+            
+            # Populate the map with results from the filtered search
+            candidate_docs_map = {str(doc.id): doc for sublist in results_from_searches for doc in sublist}
+
+        # 2. If the filtered search returned no results, or if there were no filters
+        #    to begin with, perform a search without filters.
+        if not candidate_docs_map:
+            if rag_query.filters:
+                 logger.warning("Filtered search returned no results. Performing fallback search without filters.")
+            else:
+                 logger.info("No filters extracted. Performing standard search without filters.")
+                 
+            search_tasks_no_filters = [
+                self.kb_vector_store.search(
+                    query_text=q,
+                    query_embedding=embedding_model_service.get_embedding(q),
+                    top_k=10,
+                    filters=None,  # Explicitly no filters
+                )
+                for q in search_queries
+            ]
+            fallback_results = await asyncio.gather(*search_tasks_no_filters)
+            candidate_docs_map = {str(doc.id): doc for sublist in fallback_results for doc in sublist}
+        # --- End of fix ---
+
+        all_retrieved_docs = list(candidate_docs_map.values())
+        
+        final_docs = await self.reranker.rerank(
+            query=rag_query, documents=all_retrieved_docs, top_k=3
+        )
+        return final_docs
+
+    async def generate_response(self, user_id: str, user_prompt: str) -> Dict[str, str]:
+        """Generates a dual response by making API calls to the LLM server."""
+        logger.info(f"Processing DUAL chat response for user '{user_id}'...")
+        
+        retrieved_docs = await self._retrieve_context(user_prompt)
+        retrieved_context_chunks = [doc.content for doc in retrieved_docs]
+        history = await self.memory.get_history(user_id)
+
+        rag_messages_for_api = prompt_constructor.build_chat_prompt(
+            history=history,
+            user_prompt=user_prompt,
+            kb_context_chunks=retrieved_context_chunks,
+            chat_context_chunks=[]
+        )
+        llm_only_messages_for_api = prompt_constructor.build_chat_prompt(
+            history=history,
+            user_prompt=user_prompt,
+            kb_context_chunks=[],
+            chat_context_chunks=[]
+        )
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Payload for RAG LLM call:\n%s",
+                json.dumps(rag_messages_for_api, indent=2)
+            )
+            logger.debug(
+                "Payload for LLM-Only call:\n%s",
+                json.dumps(llm_only_messages_for_api, indent=2)
+            )
+        
+        rag_response_task = self.llm_client.chat.completions.create(
+            model=settings.LLM_MODEL_NAME,
+            messages=rag_messages_for_api,
+            temperature=0.7,
+            max_tokens=1024,
+        )
+        llm_response_task = self.llm_client.chat.completions.create(
+            model=settings.LLM_MODEL_NAME,
+            messages=llm_only_messages_for_api,
+            temperature=0.7,
+            max_tokens=1024,
+        )
+        
+        try:
+            rag_response, llm_response = await asyncio.gather(rag_response_task, llm_response_task)
+        except Exception as e:
+            logger.error(f"An error occurred during LLM API call: {e}", exc_info=True)
+            return {
+                "rag_answer": "Sorry, I encountered an error while contacting the AI model with context.",
+                "llm_answer": "Sorry, I encountered an error while contacting the AI model."
+            }
+        
+        rag_answer = rag_response.choices[0].message.content.strip() if rag_response.choices[0].message.content else ""
+        llm_answer = llm_response.choices[0].message.content.strip() if llm_response.choices[0].message.content else ""
+
+        await self.memory.add_message_to_history(user_id=user_id, role="user", content=user_prompt)
+        await self.memory.add_message_to_history(user_id=user_id, role="assistant", content=rag_answer)
+
+        return {"rag_answer": rag_answer, "llm_answer": llm_answer}
 
 
 def initialize_ai_services() -> AIEngineComponents:
-    """
-    Initializes and returns all core AI services (LLM Adapter and RAG Engine).
-
-    This function is the single entry point for setting up the AI capabilities.
-    It loads the model via the LlamaCPP adapter, which makes it compatible with
-    LlamaIndex, and then builds the RAG pipeline using that adapter.
-
-    Returns:
-        A tuple containing the LlamaCPP adapter and the RAG Query Engine.
-        Returns (None, None) if a critical error occurs during initialization.
-    """
-    logging.info("--- AI Services Initialization: START ---")
+    """Initializes and returns all core AI services."""
+    logger.info("--- AI Services Initialization (Client-Server): START ---")
     
-    # 1. Initialize the LlamaCPP model adapter. This is a mandatory component.
-    local_llm_adapter: Optional[LlamaCPP] = None
+    llm_client = AsyncOpenAI(
+        base_url=settings.LLM_SERVER_BASE_URL,
+        api_key="not-needed-for-local-server"
+    )
+    
     try:
-        with log_execution_time("LLM Model Loading via LlamaCPP Adapter"):
-            # Parameters specific to the llama.cpp model (like n_gpu_layers)
-            # must be passed via the `model_kwargs` dictionary.
-            local_llm_adapter = LlamaCPP(
-                model_path=str(settings.MODEL_PATH),
-                temperature=0.7,
-                max_new_tokens=512,
-                context_window=4096,
-                # Pass model-specific kwargs here
-                model_kwargs={"n_gpu_layers": -1},
-                # Pass generation-specific kwargs here
-                # These will be used as defaults for all generation calls                
-                generate_kwargs={"stop": ["\nuser:", "user:", "User:", "[INST]", "[/INST]"]},
-                verbose=True,
-            )
-        logging.info("LlamaCPP adapter and underlying model loaded successfully.")
-    except Exception:
-        logging.exception("FATAL: LlamaCPP adapter initialization failed.")
-        return None, None, None
-
-    try:
-        embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
-        chroma_client = chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
-        chroma_client.heartbeat()
-    except Exception:
-        logging.exception("FATAL: Could not connect to ChromaDB or load embedding model.")
-        return local_llm_adapter, None, None
-        
-    # --- [ISSUE-23] Start of changes: Long-Term Memory ---
-    # 3. Initialize the RAG Pipeline for the Knowledge Base
-    kb_query_engine: Optional[RetrieverQueryEngine] = None
-    try:
-        with log_execution_time("Knowledge Base RAG Pipeline Initialization"):
-            kb_collection = chroma_client.get_or_create_collection(KB_COLLECTION_NAME)
-            kb_vector_store = ChromaVectorStore(chroma_collection=kb_collection)
-            kb_index = VectorStoreIndex.from_vector_store(kb_vector_store, embed_model=embed_model)
-            kb_query_engine = kb_index.as_query_engine(llm=local_llm_adapter, similarity_top_k=3)
-        logging.info("Knowledge Base RAG Query Engine initialized successfully.")
-    except Exception:
-        logging.exception("Failed to initialize Knowledge Base RAG pipeline.")
-
-    # 4. Initialize the Vector Store Index for Chat History
-    chat_history_index: Optional[VectorStoreIndex] = None
-    try:
-        with log_execution_time("Chat History Index Initialization"):
-            chat_collection = chroma_client.get_or_create_collection(CHAT_HISTORY_COLLECTION_NAME)
-            chat_vector_store = ChromaVectorStore(chroma_collection=chat_collection)
-            chat_history_index = VectorStoreIndex.from_vector_store(chat_vector_store, embed_model=embed_model)
-        logging.info("Chat History Vector Index initialized successfully.")
-    except Exception:
-        logging.exception("Failed to initialize Chat History Vector Index.")
-    
-    # 5. Initialize MemoryService, injecting all its dependencies
-    local_memory_service: Optional[MemoryService] = None
-    if hasattr(local_llm_adapter._model, "tokenizer"):
-        tokenizer_callable = local_llm_adapter._model.tokenize
-        # --- [ISSUE-24] Start of changes: Summarization Memory ---
-        local_memory_service = MemoryService(
-            tokenizer=tokenizer_callable,
-            llm_adapter=local_llm_adapter,
-            chat_history_index=chat_history_index
+        kb_store = get_vector_store_repository(
+            collection_name=KB_COLLECTION_NAME,
+            embedding_dimension=settings.EMBEDDING_DIMENSION
         )
-        # --- [ISSUE-24] End of changes: Summarization Memory ---
-    else:
-        logging.error("Tokenizer not available. MemoryService could not be initialized.")
-    # --- [ISSUE-23] End of changes: Long-Term Memory ---
-        
-    return local_llm_adapter, kb_query_engine, local_memory_service
-
-
-# --- [ISSUE-25] Start of changes: Score-based RAG ---
-def _filter_and_log_retrieved_nodes(
-    retrieved_nodes: List[NodeWithScore],
-    source_name: str
-) -> List[str]:
-    """
-    Filters retrieved nodes by a relevance threshold and logs their scores.
-
-    This helper function improves observability by showing exactly which context
-    is being used and why, and improves prompt quality by discarding irrelevant noise.
-
-    Args:
-        retrieved_nodes: A list of NodeWithScore objects from a retriever.
-        source_name: A string identifying the source (e.g., "Knowledge Base").
-
-    Returns:
-        A list of content strings from the nodes that passed the threshold.
-    """
-    if not retrieved_nodes:
-        logging.info(f"Retrieved 0 context chunks from {source_name}.")
-        return []
-        
-    logging.info(f"Retrieved {len(retrieved_nodes)} raw context chunks from {source_name}. Filtering by score > {RELEVANCE_THRESHOLD}...")
-    
-    high_confidence_chunks = []
-    for i, node_with_score in enumerate(retrieved_nodes):
-        score = node_with_score.get_score()
-        text_preview = node_with_score.get_text()[:100].replace('\n', ' ')
-        
-        if score >= RELEVANCE_THRESHOLD:
-            logging.info(
-                f"  - [PASS] Chunk {i+1} from {source_name}: "
-                f"Score={score:.4f}, Text='{text_preview}...'"
-            )
-            high_confidence_chunks.append(node_with_score.get_content())
-        else:
-            logging.warning(
-                f"  - [DROP] Chunk {i+1} from {source_name}: "
-                f"Score={score:.4f} is below threshold. Text='{text_preview}...'"
-            )
-            
-    logging.info(f"Found {len(high_confidence_chunks)} relevant chunks from {source_name} after filtering.")
-    return high_confidence_chunks
-# --- [ISSUE-25] End of changes: Score-based RAG ---
-
-
-async def generate_chat_response(
-    llm: LlamaCPP,
-    memory_service: MemoryService,
-    kb_rag_engine: Optional[RetrieverQueryEngine],
-    user_id: str,
-    user_prompt: str,
-) -> str:
-    """
-    Generates a contextual chat response using RAG (from two sources) and memory.
-    """
-    if not llm or not memory_service:
-        raise RuntimeError("Core AI services (LLM or Memory) were not provided.")
-    
-    logging.info(f"Processing chat response for user '{user_id}'...")
-
-    # --- [ISSUE-25] Start of changes: Score-based RAG ---
-    # 1a. RAG Retrieval from Knowledge Base
-    kb_context_chunks = []
-    with log_execution_time("RAG Knowledge Base Retrieval"):
-        if kb_rag_engine:
-            try:
-                kb_retrieval_response = await kb_rag_engine.aquery(user_prompt)
-                kb_context_chunks = _filter_and_log_retrieved_nodes(
-                    kb_retrieval_response.source_nodes, "Knowledge Base"
-                )
-            except Exception:
-                logging.exception("Error during Knowledge Base RAG retrieval.")
-    
-    # 1b. RAG Retrieval from Chat History
-    chat_history_chunks = []
-    with log_execution_time("RAG Chat History Retrieval"):
-        if memory_service and memory_service.chat_history_index:
-            try:
-                history_retriever = VectorIndexRetriever(
-                    index=memory_service.chat_history_index,
-                    vector_store_query_mode="default",
-                    vector_store_kwargs={"where": {"user_id": user_id}},
-                    similarity_top_k=3,
-                )
-                history_retrieved_nodes = await history_retriever.aretrieve(user_prompt)
-                chat_history_chunks = _filter_and_log_retrieved_nodes(
-                    history_retrieved_nodes, "Chat History"
-                )
-            except Exception:
-                logging.exception("Error during Chat History RAG retrieval.")
-    # --- [ISSUE-25] End of changes: Score-based RAG ---
-
-    # 2. Short-Term Memory Retrieval from Redis
-    with log_execution_time("Redis History Retrieval"):
-        history = await memory_service.get_history(user_id)
-        logging.info(f"Retrieved {len(history)} messages from short-term memory (Redis).")
-    
-    # 3. Prompt Construction
-    with log_execution_time("Prompt Construction"):
-        messages_for_llm = build_chat_prompt(
-            history=history,
-            user_prompt=user_prompt,
-            kb_context_chunks=kb_context_chunks,
-            chat_context_chunks=chat_history_chunks,
+        chat_history_store = get_vector_store_repository(
+            collection_name=CHAT_HISTORY_COLLECTION_NAME,
+            embedding_dimension=settings.EMBEDDING_DIMENSION
         )
-
-    # Log the final prompt for debugging
-    messages_as_dicts = [msg.model_dump() for msg in messages_for_llm]
-    prompt_design_for_log = json.dumps(messages_as_dicts, indent=2, ensure_ascii=False)
-    logging.info(f"[LLM_PROMPT] Sending to LLM for user '{user_id}':\n{prompt_design_for_log}")
-
-    # 4. LLM Generation Step
-    with log_execution_time("LLM Generation"):
-        response = await llm.achat(messages_for_llm)
-        generated_text = response.message.content.strip()
+    except Exception:
+        logger.exception("FATAL: Could not initialize Vector Store Repositories.")
+        return None, None
+        
+    memory_service = MemoryService(
+        llm_client=llm_client,
+        chat_history_store=chat_history_store
+    )
     
-    logging.info(f"LLM generated response: '{generated_text[:100]}...'")
-
-    # 5. Update All Memories
-    with log_execution_time("Memory Update"):
-        await memory_service.add_message_to_history(
-            user_id=user_id, role="user", content=user_prompt
-        )
-        await memory_service.add_message_to_history(
-            user_id=user_id, role="assistant", content=generated_text
-        )
-
-    return generated_text
+    rag_engine = RAGEngine(
+        llm_client=llm_client,
+        memory_service=memory_service,
+        kb_vector_store=kb_store,
+        chat_history_vector_store=chat_history_store
+    )
+    logger.info("Advanced RAGEngine (Client Mode) initialized successfully.")
+        
+    return rag_engine, memory_service

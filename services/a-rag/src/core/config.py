@@ -39,7 +39,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # --- Model Configuration ---
-    MODEL_PATH: str
+    # --- [DEPRECATED] ---
+    # MODEL_PATH: str
+    
+    # --- [NEW] LLM Inference Server Configuration ---
+    LLM_SERVER_BASE_URL: str
+    LLM_MODEL_NAME: str
+
 
     # --- Redis Configuration ---
     REDIS_HOST: str = "localhost"
@@ -56,11 +62,31 @@ class Settings(BaseSettings):
     CHROMA_HOST: str = "localhost"
     CHROMA_PORT: int = 8000 # Changed to int for type safety
 
-    # --- Qdrant Configuration (New Default) ---
+    # --- Qdrant Configuration ---
     QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333 # Default gRPC port for Qdrant
 
     # --- [ISSUE-28] End of changes: Vector DB Migration ---
+    
+    
+    # --- Embedding Model Configuration ---
+    EMBEDDING_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
+    EMBEDDING_DEVICE: str = "auto"
+    
+    # --- [NEW] Reranker Model Configuration ---
+    RERANKER_MODEL_NAME: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+    
+    # Сompute the embedding dimension dynamically later,
+    @property
+    def EMBEDDING_DIMENSION(self) -> int:
+        # This is a simple way to manage dimensions for known models.
+        if "all-MiniLM-L6-v2" in self.EMBEDDING_MODEL_NAME:
+            return 384
+        elif "bge-large-en-v1.5" in self.EMBEDDING_MODEL_NAME:
+            return 1024
+        # Default or fallback dimension
+        return 384
 
     # --- Pydantic Model Configuration ---
     model_config = SettingsConfigDict(

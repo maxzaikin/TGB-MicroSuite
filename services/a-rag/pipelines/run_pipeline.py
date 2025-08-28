@@ -1,28 +1,50 @@
+# file: services/a-rag/pipelines/run_pipeline.py
+
 """
-file: services/a-rag/pipelines/run_pipeline.py
-
-# --- [ISSUE-26] Implement ZenML for MLOps Pipeline Management ---
-
 Command-Line Interface (CLI) to run MLOps pipelines.
 
 This script serves as the single entry point for triggering all ZenML
-pipelines defined in this project. It ensures that pipelines are run
-with the correct parameters and configurations.
+pipelines. It is designed to be extensible and now supports both synchronous
+and asynchronous pipeline definitions.
 """
 import argparse
+import asyncio
+import inspect
 import logging
 from pathlib import Path
 
-# Import the pipeline definition
-from .feature_pipeline import feature_ingestion_pipeline
+from pipelines.feature_ingestion_pipeline import feature_ingestion_pipeline
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- Constants ---
-# We can still define a default collection name here.
-DEFAULT_COLLECTION_NAME = "rag_documentation_v2" # v2 to avoid conflicts
+
+def setup_feature_ingestion_parser(parser: argparse.ArgumentParser):
+    """Adds arguments specific to the feature_ingestion_pipeline."""
+    parser.add_argument(
+        "--source-dir",
+        type=str,
+        required=True,
+        help="Path to the source directory containing documents to ingest.",
+    )
+    parser.add_argument(
+        "--collection-name",
+        type=str,
+        default="main_knowledge_base",
+        help="The name of the vector database collection to use.",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=512,
+        help="The target size for text chunks.",
+    )
+    parser.add_argument(
+        "--chunk-overlap",
+        type=int,
+        default=50,
+        help="The overlap size between consecutive chunks.",
+    )
 
 
 def main():
@@ -32,42 +54,42 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
     
-    # We can add sub-parsers later if we have more pipelines
-    parser.add_argument(
-        "--pipeline-name",
-        type=str,
-        default="feature_ingestion",
-        choices=["feature_ingestion"], # Add more as we create them
-        help="The name of the pipeline to run.",
+    subparsers = parser.add_subparsers(dest="pipeline_name", required=True)
+
+    ingestion_parser = subparsers.add_parser(
+        "feature-ingestion", 
+        help="Runs the RAG feature ingestion pipeline."
+    )
+    setup_feature_ingestion_parser(ingestion_parser)
+    ingestion_parser.set_defaults(
+        func=feature_ingestion_pipeline, 
+        pipeline_args=["source_dir", "collection_name", "chunk_size", "chunk_overlap"]
     )
     
-    # Arguments specific to the feature_ingestion_pipeline
-    parser.add_argument(
-        "--source-dir",
-        type=Path,
-        required=True,
-        help="Path to the source directory for the ingestion pipeline.",
-    )
-    parser.add_argument(
-        "--collection",
-        type=str,
-        default=DEFAULT_COLLECTION_NAME,
-        help=f"ChromaDB collection name (Default: {DEFAULT_COLLECTION_NAME}).",
-    )
-
     args = parser.parse_args()
+    args_dict = vars(args)
+    
+    pipeline_kwargs = {
+        key: args_dict[key] for key in args.pipeline_args if key in args_dict
+    }
 
-    if args.pipeline_name == "feature_ingestion":
-        logger.info(f"Triggering pipeline: '{feature_ingestion_pipeline.name}'...")
-        # Here we call the pipeline function. ZenML takes over from here.
-        feature_ingestion_pipeline(
-            source_dir=args.source_dir,
-            collection_name=args.collection,
-        )
-        logger.info("Pipeline run has been triggered successfully.")
-        logger.info("Check your ZenML dashboard to monitor the execution.")
+    pipeline_to_run = args.func
+
+    logger.info(f"Triggering pipeline: '{pipeline_to_run.name}'...")
+    logger.info(f"With parameters: {pipeline_kwargs}")
+
+    # --- [FIX] Differentiate between sync and async pipelines ---
+    if inspect.iscoroutinefunction(pipeline_to_run.entrypoint):
+        # If the pipeline is async, run it within an asyncio event loop.
+        logger.info("Detected an asynchronous pipeline. Running with asyncio.")
+        asyncio.run(pipeline_to_run(**pipeline_kwargs))
     else:
-        logger.error(f"Unknown pipeline name: {args.pipeline_name}")
+        # If the pipeline is sync, run it directly.
+        logger.info("Detected a synchronous pipeline. Running directly.")
+        pipeline_to_run(**pipeline_kwargs)
+    
+    logger.info("Pipeline run has been triggered successfully.")
+    logger.info("Check your ZenML dashboard to monitor the execution.")
 
 
 if __name__ == "__main__":
