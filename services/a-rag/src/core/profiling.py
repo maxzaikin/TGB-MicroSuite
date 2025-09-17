@@ -32,6 +32,7 @@ def log_execution_time(stage_name: str) -> Generator[None, None, None]:
     """
     logging.info(f"[PROFILE] ==> Entering stage: {stage_name}")
     start_time = time.perf_counter()
+    
     try:
         yield
     finally:
