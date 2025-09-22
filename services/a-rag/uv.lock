@@ -134,6 +134,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
+    { name = "dependency-injector" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "instructor" },
@@ -175,6 +176,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.20.0" },
     { name = "alembic", specifier = ">=1.13.0" },
     { name = "chromadb", marker = "extra == 'dev'", specifier = ">=1.0.13" },
+    { name = "dependency-injector", specifier = ">=4.48.2" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
@@ -533,6 +535,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/fa/6d96a0978d19e17b68d634497769987b16c8f4cd0a7a05048bec693caa6b/decorator-5.2.1.tar.gz", hash = "sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360", size = 56711 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/8c/f3147f5c4b73e7550fe5f9352eaa956ae838d5c51eb58e7a25b9f3e2643b/decorator-5.2.1-py3-none-any.whl", hash = "sha256:d316bb415a2d9e2d2b3abcc4084c6502fc09240e292cd76a76afc106a1c8e04a", size = 9190 },
+]
+
+[[package]]
+name = "dependency-injector"
+version = "4.48.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/a4/619df82de38ce6451cc1acb549237cbd9306c4bfbcec6e8e1fdbceb8c5f3/dependency_injector-4.48.2.tar.gz", hash = "sha256:9ce6089d75a5dd0b6191a243f41d2c2746802bb39550ad431242c15136fefd60", size = 1103335 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/56/dce91cc7638a4be4d83e18d20edd3f9b295440b1897d972f7a8ce3ea240f/dependency_injector-4.48.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:54d0178be10f17b768afb5c0ed1c5c565abaa2d097b2bc5a529a31c580613df2", size = 1755919 },
+    { url = "https://files.pythonhosted.org/packages/67/80/c29f5cb5fd794ea453b240e6d6682a07cdc519a4bd76589c4b75a1bb7a91/dependency_injector-4.48.2-cp310-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:12a15979fd534b728b3061c8aa52fd55adb77574758817daae9df8a1c2eb830b", size = 1855277 },
+    { url = "https://files.pythonhosted.org/packages/79/fa/20f14684dfb822f4b72623d4c1250149ba2fcc95a831ae334605eff31b33/dependency_injector-4.48.2-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:85cdf4b423884d4a24a18b970abe73352fb210761302cd6b5ebc6e9a20dbe53f", size = 1760596 },
+    { url = "https://files.pythonhosted.org/packages/1e/c0/06dddb1b21f64bd1e948244aed1743c8013ea7800fc6e3e470b0019dd93e/dependency_injector-4.48.2-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:a9b457b95a400b7a2de0978a55768cdd104bd265953bf0ed06e7f25d18f35ed2", size = 1742442 },
+    { url = "https://files.pythonhosted.org/packages/63/23/32575e230f5baf8082eb776847756024441207eabbb03ada679c29061070/dependency_injector-4.48.2-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:417809f565c39800adb744d666dfe4d94eae510b73ec33f932d592415d7c46d0", size = 1842421 },
+    { url = "https://files.pythonhosted.org/packages/3c/99/6595e8235d8e120129098d7a56b0491be313bab5415fc9d107ad1ae2a967/dependency_injector-4.48.2-cp310-abi3-win32.whl", hash = "sha256:f014aa7bab427932802d59967d9fe0863a0001db66446177dcc62e47f3a6b234", size = 1512262 },
+    { url = "https://files.pythonhosted.org/packages/96/04/cf1d482d163bf8c7cfd886cb4cf8eed950b366c2723dea2b21874ef2201c/dependency_injector-4.48.2-cp310-abi3-win_amd64.whl", hash = "sha256:e3fcdeb8189f3e1f87fde9276061f8a6cc596c2fa139bc4b4d1f571035ebd645", size = 1640200 },
 ]
 
 [[package]]
