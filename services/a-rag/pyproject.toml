@@ -44,7 +44,7 @@ dependencies = [
     "llama-index-vector-stores-chroma>=0.4.2",
     "llama-index-embeddings-huggingface>=0.5.4",
     "llama-index-llms-llama-cpp>=0.4.0",
-    "zenml==0.83.1",
+    "zenml==0.84.2",
     "qdrant-client>=1.14.3",
     "rank-bm25>=0.2.2",
     "langchain>=0.3.26",
