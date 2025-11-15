@@ -51,6 +51,7 @@ dependencies = [
     "instructor>=1.10.0",
     "openai>=1.88.0",
     "pymupdf>=1.26.3",
+    "dependency-injector>=4.48.2",
 ]
 
 [project.optional-dependencies]

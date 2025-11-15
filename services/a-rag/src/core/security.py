@@ -86,7 +86,11 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+    data: Dict[str, Any],
+    secret_key: str,
+    algorithm: str,
+    expires_delta: Optional[timedelta] = None,
+    expire_minutes: Optional[int]= None
 ) -> str:
     """
     Generate a JWT access token with optional expiration.
@@ -94,6 +98,7 @@ def create_access_token(
     Args:
         data (dict): The data payload to include in the token.
         expires_delta (Optional[timedelta]): Optional expiration delta.
+        TODO: Add rest of variables in doc strings
 
     Returns:
         str: The encoded JWT token.
@@ -104,14 +109,10 @@ def create_access_token(
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        expire = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
+    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
 
     return encoded_jwt
 

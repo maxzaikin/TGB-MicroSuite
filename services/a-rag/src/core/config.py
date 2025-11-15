@@ -79,8 +79,7 @@ class Settings(BaseSettings):
     
     # Сompute the embedding dimension dynamically later,
     @property
-    def EMBEDDING_DIMENSION(self) -> int:
-        # This is a simple way to manage dimensions for known models.
+    def EMBEDDING_DIMENSION(self) -> int:        
         if "all-MiniLM-L6-v2" in self.EMBEDDING_MODEL_NAME:
             return 384
         elif "bge-large-en-v1.5" in self.EMBEDDING_MODEL_NAME:
@@ -109,4 +108,4 @@ def get_settings() -> Settings:
 
 
 # Create a single, globally accessible instance of the settings for easy import.
-settings = get_settings()
+settings = get_settings() 
