@@ -21,12 +21,21 @@ from src.core.config import settings
 from src.core.profiling import log_execution_time
 from src.storage.rel_db.db_adapter import DBAdapter
 from src.storage.redis_client import redis_client
+from core.container import AppContainer
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
 )
 
+def wire_containers(container: AppContainer):
+    container.wire(modules=[
+        __name__,
+        "api.endpoints.auth_router",
+        "api.endpoints.llm_router",
+        "api.endpoints.akey_router",
+        "api.endpoints.memory_router",
+    ])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -41,19 +50,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     logging.info(f"--- Service '{settings.PROJECT_NAME}' is starting up ---")
 
-    with log_execution_time("Total AI Services Initialization"):
-        rag, mem = rag_engine.initialize_ai_services()
-        
-        if rag:
-            logging.info("Performing async initialization of vector stores...")
-            await rag.kb_vector_store.initialize()
-            await rag.chat_history_vector_store.initialize()
-            logging.info("Vector stores initialized successfully.")
+    container = AppContainer()
+    app.state.container = container
 
-        # Store the main service instances in the application state.
-        app.state.rag_engine = rag
-        app.state.memory_service = mem
-
+    wire_containers(container)
+    
+    container.init_resources()
+    
     if app.state.rag_engine:
         logging.info("Advanced RAGEngine (Client Mode) initialized.")
     if app.state.memory_service:
@@ -66,11 +69,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # --- Application Shutdown ---
-    if hasattr(app.state, "db_adapter") and app.state.db_adapter:
-        await app.state.db_adapter.close()
-        logging.info("DBAdapter connections closed.")
-
-    await redis_client.close()
+    container.shutdown_resources()
     logging.info("Redis client connection closed.")
     logging.info("--- Service shutdown complete. ---")
 

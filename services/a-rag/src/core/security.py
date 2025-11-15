@@ -90,7 +90,7 @@ def create_access_token(
     secret_key: str,
     algorithm: str,
     expires_delta: Optional[timedelta] = None,
-    expire_minutes: Optiona[int]= None
+    expire_minutes: Optional[int]= None
 ) -> str:
     """
     Generate a JWT access token with optional expiration.
